@@ -30,6 +30,8 @@ import wrenchDark from './assets/icons/wrench-dark.svg'
 import wrenchLight from './assets/icons/wrench-light.svg'
 import sshDark from './assets/icons/ssh-dark.svg'
 import sshLight from './assets/icons/ssh-light.svg'
+import readmeDark from './assets/icons/readme-dark.svg'
+import readmeLight from './assets/icons/readme-light.svg'
 
 const ICON_MAP = {
   moon: { dark: moonDark, light: moonLight },
@@ -45,6 +47,7 @@ const ICON_MAP = {
   , "jfrog-icon": { dark: jfrogIconDark, light: jfrogIconLight }
   , settings: { dark: wrenchDark, light: wrenchLight }
   , ssh: { dark: sshDark, light: sshLight }
+  , readme: { dark: readmeDark, light: readmeLight }
 }
 
 // Open external links reliably from the webview.
@@ -2232,3 +2235,56 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }, interval)
 })
+
+  // Setup README button/modal
+  function setupReadmeButton() {
+    const btn = document.getElementById('readmeBtn')
+    if (!btn) return
+    btn.addEventListener('click', () => {
+      const md = typeof readmeText !== 'undefined' ? readmeText : ''
+      const html = `<div class="readme">${mdToHtml(md)}</div>`
+      try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
+      let modal = document.getElementById('readmeModal')
+      const closeExisting = () => {
+        try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { }
+        try { detachModalAccessibility(modal) } catch (e) { }
+      }
+      if (modal) {
+        const container = modal.querySelector('.detail-body') || modal
+        if (container) container.innerHTML = html
+        modal.classList.remove('hidden')
+        modal.setAttribute('aria-hidden', 'false')
+        try { const closeBtn = modal.querySelector('[data-close]'); if (closeBtn) closeBtn.focus() } catch (e) { }
+        try { attachModalAccessibility(modal, closeExisting) } catch (e) { }
+        return
+      }
+
+      try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
+      modal = document.createElement('div')
+      modal.id = 'readmeModal'
+      modal.className = 'detail-modal readme-modal'
+      modal.setAttribute('aria-hidden', 'false')
+      modal.innerHTML = `
+        <div class="overlay" data-overlay tabindex="-1"></div>
+        <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="readmeTitle">
+          <header>
+            <h2 id="readmeTitle">README</h2>
+            <div>
+              <button class="detail-close" data-close aria-label="Close README">
+                <img data-themed="true" data-icon="close" src="${ICON_MAP.close.dark}" alt="Close" />
+              </button>
+            </div>
+          </header>
+          <div class="detail-body">${html}</div>
+        </div>`
+      document.body.appendChild(modal)
+      try { applyTheme && applyTheme(getSavedTheme()) } catch (e) { }
+      const close = () => { try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { } ; try { detachModalAccessibility(modal) } catch (e) { } }
+      modal.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', close))
+      const overlay = modal.querySelector('[data-overlay]')
+      if (overlay) overlay.addEventListener('click', close)
+      try { attachModalAccessibility(modal, close) } catch (e) { }
+    })
+  }
+
+  window.addEventListener('DOMContentLoaded', () => { setupReadmeButton() })
