@@ -9,6 +9,24 @@ dist/
 build/
 public/build/
 
+## Rust / Tauri build outputs
+# ignore tauri/cargo build artifacts and general Rust `target` dirs
+/src-tauri/target/
+/target/
+**/target/
+
+# compiled artifacts
+*.rlib
+*.d
+*.so
+*.dylib
+*.dll
+
+## Cargo / build caches
+.cargo/
+.fingerprint/
+
+
 ## Env files
 .env
 .env.*
