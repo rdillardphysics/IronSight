@@ -1,0 +1,34 @@
+## Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Build outputs
+dist/
+build/
+public/build/
+
+## Env files
+.env
+.env.*
+
+## macOS
+.DS_Store
+
+## Editors
+.vscode/
+.idea/
+
+## Testing
+coverage/
+.nyc_output/
+
+## Misc
+.cache/
+/.parcel-cache/
+/.pnp/
+/.pnp.js
+
+## Logs
+*.log

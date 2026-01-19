@@ -1,0 +1,1259 @@
+:root {
+    /* Dark theme variables */
+    --bg: #0b1020;
+    /* page background */
+    --panel: #0f1724;
+    /* card/panel */
+    --muted: #9aa4b2;
+    /* secondary text */
+    --text: #e6eef6;
+    /* main text */
+    --accent: #3b82f6;
+    /* buttons */
+    --muted-2: #93a1b5;
+    --border: rgba(255, 255, 255, 0.08);
+    /* alternating row backgrounds for findings table (theme-aware) */
+    --row-bg-odd: rgba(255, 255, 255, 0.02);
+    --row-bg-even: rgba(0, 0, 0, 0.04);
+    /* README link color defaults (dark theme) — lighter than body text */
+    --readme-link: #7ee2b8;
+}
+
+/* Screen-reader-only helper: visually hidden but accessible to assistive tech */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Light theme override (applied when body.light class is present) */
+.light {
+    /* slightly darker soft light-blue theme */
+    --bg: #d6eefb;
+    /* slightly deeper sky blue page background */
+    --panel: #e6f8ff;
+    /* a touch darker panel background */
+    --muted: #2f5970;
+    /* deeper blue-gray for labels */
+    --text: #042a39;
+    /* darker marine text for improved contrast */
+    --accent: #1550b4;
+    /* stronger blue accent */
+    --muted-2: #6f95ab;
+    --border: rgba(2, 18, 34, 0.08);
+    /* lighter theme: subtle darker overlays for alternating rows */
+    --row-bg-odd: rgba(0, 0, 0, 0.03);
+    --row-bg-even: rgba(0, 0, 0, 0.01);
+    /* README link color for light theme (darker accent on light bg) */
+    --readme-link: #1550b4;
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.45
+}
+
+/* Ensure form controls (inputs, textareas, selects, buttons) use the app font
+   and match the body's line-height so textboxes/buttons look consistent. */
+input,
+textarea,
+select,
+button,
+optgroup,
+option,
+label,
+.btn,
+.input-group input,
+.input-group .btn {
+    font-family: inherit;
+    line-height: inherit;
+}
+
+/* Make placeholder text use the same font for consistency */
+input::placeholder,
+textarea::placeholder {
+    font-family: inherit;
+    opacity: 0.75
+}
+
+header {
+    padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 18px
+}
+
+main {
+    padding: 20px;
+    max-width: 1600px;
+    margin: 18px auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0
+}
+
+label {
+    font-weight: 600;
+    margin-right: 8px;
+    color: var(--muted)
+}
+
+/* label for the path input inside controls */
+.controls .path-label {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 10px;
+    color: var(--muted)
+}
+
+input[type=text],
+input[type=search],
+input[type=password],
+select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+}
+
+/* Make textareas theme-aware: match inputs' border, radius, and text color.
+   Use transparent background so the textarea sits on top of the panel color
+   and follows the `.light` class variables when theme toggles. */
+textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    min-height: 88px;
+    resize: vertical;
+}
+
+/* Button system */
+/* Button base: neutral background, slightly raised with a fast animation */
+.btn {
+    margin-left: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transform-origin: center center;
+    transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .14s ease, background .12s ease;
+}
+
+.btn:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.14);
+    outline-offset: 3px
+}
+
+/* Ensure every button shows a visible left border.
+  Some component rules previously removed left borders for joined buttons;
+  override those so all buttons keep a visible left edge for clarity. */
+.btn {
+    border-left: 1px solid var(--border) !important
+}
+
+.btn-ghost {
+    border-color: var(--border) !important
+}
+
+.input-group .btn.attached,
+.input-group .btn.attached-text,
+.btn-group .btn,
+.output-panel .meta .filters .btn {
+    border-left: 1px solid var(--border) !important
+}
+
+/* Primary/secondary variants keep transparent backgrounds but slightly emphasize with color */
+.btn-primary {
+    color: var(--text);
+    background: transparent
+}
+
+.btn-secondary {
+    color: var(--text);
+    background: transparent
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid transparent
+}
+
+.btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 26px rgba(2, 6, 23, 0.14);
+}
+
+.btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 8px rgba(2, 6, 23, 0.06);
+}
+
+/* Slight scale feedback for keyboard focus (subtle) */
+.btn:focus-visible {
+    transform: scale(1.04);
+}
+
+.btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    /* disable transitions/animations for disabled buttons */
+    transition: none !important;
+}
+
+/* ensure disabled buttons do not react to hover/active/focus with transforms or shadows */
+.btn[disabled]:hover,
+.btn[disabled]:active,
+.btn[disabled]:focus {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Icon-only button variant */
+.btn-icon {
+    padding: 8px;
+    width: 44px;
+    height: 44px;
+    justify-content: center
+}
+
+.btn-icon img {
+    width: 18px;
+    height: 18px;
+    display: block
+}
+
+/* Slightly enlarge the SSH icon in the header so it's visually prominent
+  without affecting other icon sizes. Uses a more specific selector so it
+  overrides the general `.btn-icon img` rule. */
+#startSshTunnelBtn img[data-icon="ssh"] {
+    width: 22px;
+    height: 22px;
+    display: block
+}
+
+/* Status overlay for the SSH button: a small dot in the top-right corner. */
+#startSshTunnelBtn {
+    position: relative
+}
+
+#startSshTunnelBtn::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.12);
+    background: #ef4444;
+    /* default red (stopped) */
+    pointer-events: none;
+    opacity: 1;
+}
+
+#startSshTunnelBtn.ssh-running::after {
+    background: #10b981;
+    border-color: rgba(16, 185, 129, 0.18)
+}
+
+#startSshTunnelBtn.ssh-stopped::after {
+    background: #ef4444;
+    border-color: rgba(239, 68, 68, 0.18)
+}
+
+.btn-primary img#startScanIcon,
+#startScanBtn img {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.btn-icon.btn-secondary {
+    border-radius: 8px
+}
+
+.btn-icon:hover {
+    filter: brightness(0.98)
+}
+
+.meta {
+    margin-bottom: 12px;
+    color: var(--text);
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 6px;
+    /* subtle background that works in both themes; refined per-theme below */
+    background: rgba(2, 6, 23, 0.06);
+}
+
+.light .meta {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+}
+
+/* When the filters are appended into the meta, lay out meta as a row
+   with the filter actions aligned to the right. Keep spacing compact. */
+.output-panel .meta {
+    display: flex;
+    align-items: center;
+    gap: 12px
+}
+
+/* Inline filters in the meta should appear as a joined button pair */
+.output-panel .meta .filters {
+    margin-left: auto;
+    display: flex;
+    gap: 0;
+    align-items: center
+}
+
+.output-panel .meta .filters button {
+    height: 30px;
+    padding: 4px 8px;
+    font-size: 13px;
+    margin-left: 0
+}
+
+.output-panel .meta .filters .btn-icon,
+.output-panel .meta .filters .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center
+}
+
+.output-panel .meta .filters img {
+    width: 16px;
+    height: 16px;
+    display: block
+}
+
+.output-panel .meta .filters .btn {
+    border-radius: 0
+}
+
+.output-panel .meta .filters .btn:first-child {
+    border-radius: 6px 0 0 6px
+}
+
+.output-panel .meta .filters .btn:last-child {
+    border-radius: 0 6px 6px 0
+}
+
+.output-panel .meta .filters .btn:not(:first-child) {
+    border-left: none
+}
+
+.findings {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: none
+}
+
+.findings-head {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed
+}
+
+.findings-head th {
+    padding: 10px 12px;
+    text-align: left
+}
+
+.findings th,
+.findings td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: left
+}
+
+.findings th {
+    background: transparent;
+    font-size: 13px;
+    color: var(--muted)
+}
+
+.findings,
+.findings th,
+.findings td {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.findings th[data-sort] {
+    cursor: pointer
+}
+
+.findings th[data-sort]:hover {
+    background: rgba(228, 197, 197, 0.02)
+}
+
+.findings th[data-sort]::after {
+    content: '';
+    margin-left: 6px
+}
+
+/* Zebra striping: alternate row backgrounds using theme-aware variables */
+.findings tbody tr:nth-child(odd) td {
+    background: var(--row-bg-odd);
+}
+
+.findings tbody tr:nth-child(even) td {
+    background: var(--row-bg-even);
+}
+
+.findings tbody tr:hover td {
+    /* subtle hover highlight across the row */
+    background: rgba(59, 130, 246, 0.06);
+}
+
+/* Focus / keyboard-selected row styling to make the highlighted row obvious
+   when navigating with arrow keys. Use theme-aware colors and a soft
+   outline so users can quickly identify the active row. */
+.findings tbody tr:focus td,
+.findings tbody tr[aria-selected="true"] td {
+    background: rgba(59, 130, 246, 0.12);
+    outline: 2px solid rgba(59, 130, 246, 0.18);
+    outline-offset: -2px;
+}
+
+.light .findings tbody tr:focus td,
+.light .findings tbody tr[aria-selected="true"] td {
+    background: rgba(21, 80, 180, 0.08);
+    outline: 2px solid rgba(21, 80, 180, 0.12);
+    outline-offset: -2px;
+}
+
+/* Prefer a visible focus ring for keyboard users while avoiding large
+   visual changes for mouse hover. Use focus-visible where supported. */
+.findings tbody tr:focus:not(:focus-visible) td {
+    /* caret focus fallback: keep subtle appearance when focus isn't keyboard-driven */
+    outline: none;
+}
+
+/* Keep the table headers visible while the findings list scrolls */
+.findings thead th {
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+    color: var(--muted);
+    z-index: 2;
+}
+
+.severity.critical {
+    color: #ff4d6d
+}
+
+.severity.high {
+    color: #ff7a59
+}
+
+.severity.medium {
+    color: #fbbf24
+}
+
+.severity.low {
+    color: #34d399
+}
+
+.severity.info {
+    color: #60a5fa
+}
+
+.loading {
+    padding: 10px;
+    color: var(--muted)
+}
+
+.error {
+    padding: 10px;
+    color: #ff6b6b
+}
+
+/* helper to hide the output panel until content is available */
+.hidden {
+    display: none
+}
+
+/* Filters layout */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap
+}
+
+.filters {
+    margin-left: 8px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center
+}
+
+.filters.hidden {
+    display: none
+}
+
+.filters .btn.attached-text {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    height: 36px;
+    padding: 4px 8px;
+}
+
+.light .filters .btn.attached-text {
+    border: 1px solid rgba(2, 18, 34, 0.08);
+}
+
+.input-group {
+    display: flex;
+    align-items: stretch
+}
+
+.input-group input {
+    border-radius: 8px 0 0 8px;
+    border-right: 0;
+    padding: 0 12px;
+    height: 44px;
+    box-sizing: border-box
+}
+
+.input-group .btn.attached {
+    border-radius: 0;
+    margin-left: 0;
+    border-left: 0;
+    height: 44px;
+    padding: 0;
+    width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box
+}
+
+/* attached-text variant: textual buttons attached to the right of an input (no fixed width) */
+.input-group .btn.attached-text {
+    border-radius: 0;
+    margin-left: 0;
+    /* give the attached text buttons a full visible border so the Clear button shows its outline
+     this overrides .btn-ghost which sets border: transparent */
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    height: 44px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.input-group .btn.attached-text:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Ensure attached icon buttons ('.attached') get rounded trailing corners when
+  they are the last child in an input-group (e.g., preset Save button). */
+.input-group .btn.attached:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Ensure there is no extra gap between adjacent buttons inside the input group */
+.input-group .btn {
+    margin-left: 0
+}
+
+.input-group .btn+.btn {
+    margin-left: 0
+}
+
+/* Inline scan controls placed inside the `.controls` row and aligned right */
+.scan-inline {
+    margin-left: auto;
+    display: flex;
+    align-items: center
+}
+
+.controls,
+.scan-inline {
+    padding-left: 8px;
+}
+
+.scan-inline .scan-ui {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap
+}
+
+.scan-inline #sshFields {
+    display: none;
+    align-items: center;
+    gap: 8px
+}
+
+.scan-inline #sshFields input {
+    min-width: 160px
+}
+
+.scan-inline .scan-label {
+    font-weight: 600;
+    color: var(--muted)
+}
+
+.scan-inline input[type=text] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px
+}
+
+/* (legacy) spacing rule preserved for scenarios where filters sit next to controls */
+.scan-inline+.filters {
+    margin-top: 12px
+}
+
+/* Scale icons inside attached-text buttons (e.g. the Clear button) to match other icons */
+#clearLoaded img,
+.input-group .btn.attached-text img {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* stronger separator for light theme */
+.light .input-group .btn.attached-text {
+    border: 1px solid rgba(2, 18, 34, 0.08)
+}
+
+.controls>input[type=text] {
+    min-width: 320px
+}
+
+.filters label.inline {
+    margin-left: 8px
+}
+
+/* Hide empty label spans inside buttons (so icon-only buttons don't leave extra gap) */
+.btn .btn-label {
+    margin-left: 6px;
+    display: inline-block
+}
+
+.btn .btn-label:empty {
+    display: none
+}
+
+/* Button group styling: join adjacent buttons so middle corners are square
+  and outer corners remain rounded. Used by modal action buttons. */
+.btn-group {
+    display: flex;
+    gap: 0;
+    justify-content: flex-end;
+    margin-top: 12px
+}
+
+.btn-group .btn {
+    border-radius: 0;
+    margin-left: 0
+}
+
+.btn-group .btn:first-child {
+    border-radius: 8px 0 0 8px
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 8px 8px 0
+}
+
+.btn-group .btn:not(:first-child) {
+    border-left: none
+}
+
+/* Output panel */
+.output-panel {
+    /* darker top-level panel to visually separate the findings area */
+    background: rgba(2, 6, 23, 0.6);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 6px;
+    /* allow the panel to grow to near the bottom of the viewport */
+    flex: 1 1 auto;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+    min-height: 0;
+    /* don't make the panel itself the scroll container — allow inner containers to scroll
+     (README still has its own overflow rules) */
+    overflow: visible;
+}
+
+/* Break out the output panel to use more horizontal space on larger viewports
+     so the findings table is not constrained by the centered `main` column. */
+@media (min-width: 900px) {
+    .output-panel {
+        width: calc(100vw - 40px);
+        max-width: none;
+        margin-left: calc(50% - 50vw + 20px);
+        margin-right: calc(50% - 50vw + 20px);
+    }
+}
+
+/* Allow table cells to wrap long package names and avoid aggressive truncation */
+.findings td {
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* make the outer output section stretch and be scrollable to the bottom */
+.output-section {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* make this a column so inner panel can flex */
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0 12px
+}
+
+/* ensure the output panel fills the section and lays out its meta + findings */
+.output-section .output-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column
+}
+
+/* README area styling when no JSON is loaded */
+.readme {
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    color: var(--muted-2);
+    padding: 18px;
+    border-radius: 6px;
+    background: transparent
+}
+
+.readme a {
+    color: var(--readme-link);
+    text-decoration: underline;
+}
+
+.readme {
+    overflow: auto;
+    max-height: 100%
+}
+
+.readme h1 {
+    color: var(--text);
+    margin-top: 0
+}
+
+/* make only the findings list scrollable while keeping the meta area static */
+.findings-container {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 6px 0 12px;
+    min-height: 0
+}
+
+.findings-container .findings {
+    margin: 0;
+    border-radius: 6px
+}
+
+/* lighter variant for light theme while keeping a darker-than-background look */
+.light .output-panel {
+    background: rgba(2, 18, 34, 0.06);
+    color: var(--text)
+}
+
+/* ensure hiding the output panel wins over the output-panel display rule */
+.output-panel.hidden {
+    display: none
+}
+
+/* Theme toggle styles */
+header {
+    position: relative
+}
+
+.theme-toggle {
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Ensure the grouped buttons inside the theme toggle are vertically centered
+   and don't inherit the global .btn-group top margin used in modals. */
+.theme-toggle .btn-group {
+    margin-top: 0;
+    align-items: center;
+    display: flex;
+}
+
+.theme-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    display: inline-block;
+    user-select: none
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    transition: background 0.18s
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: var(--panel);
+    border-radius: 50%;
+    transition: transform 0.18s;
+    box-shadow: 0 2px 6px rgba(2, 6, 23, 0.5)
+}
+
+.switch input:checked ~ .slider {
+    background: var(--accent)
+}
+
+.switch input:checked ~ .slider:before {
+    transform: translateX(20px)
+}
+
+/* ensure contrast for button-like elements */
+:root {
+    --button-text: #081024
+}
+
+.light {
+    --button-text: #ffffff
+}
+
+/* Improve toggle contrast in light theme */
+.light .switch .slider {
+    background: rgba(2, 18, 34, 0.12);
+    /* slightly darker track */
+}
+
+.light .switch .slider:before {
+    background: var(--text);
+    /* darker knob for contrast */
+    box-shadow: 0 2px 6px rgba(2, 18, 34, 0.12);
+}
+
+.light .switch input:checked ~ .slider {
+    background: var(--accent)
+}
+
+.light .switch input:checked ~ .slider:before {
+    background: var(--panel);
+    box-shadow: 0 2px 6px rgba(2, 18, 34, 0.08);
+}
+
+/* Custom tooltip styling removed; using native title tooltips for now. */
+
+/* Toast notifications (lower-right) */
+.toast-container {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999
+}
+
+.toast {
+    background: rgba(2, 6, 23, 0.9);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.6);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .18s ease, transform .18s ease;
+    font-weight: 600;
+    min-width: 200px
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0)
+}
+
+.toast.error {
+    background: #ff6b6b;
+    color: #fff
+}
+
+.light .toast {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text)
+}
+
+/* Detail modal / panel for finding details */
+.detail-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000
+}
+
+.detail-modal.hidden {
+    display: none
+}
+
+.detail-modal .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.6)
+}
+
+/* Ensure overlay sits behind the panel so panel controls are clickable */
+.detail-modal .overlay {
+    z-index: 1;
+    pointer-events: auto;
+}
+
+.light .detail-modal .overlay {
+    background: rgba(2, 18, 34, 0.28)
+}
+
+.detail-panel {
+    position: relative;
+    z-index: 3;
+    width: min(880px, calc(100% - 48px));
+    max-height: 90vh;
+    overflow: auto;
+    background: var(--panel);
+    color: var(--text);
+    border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(2, 6, 23, 0.6);
+    padding: 10px
+}
+
+.detail-panel header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    padding: 6px 10px
+}
+
+.detail-panel h2 {
+    margin: 0;
+    font-size: 16px
+}
+
+.detail-panel .meta-row {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 8px
+}
+
+.detail-panel .detail-body {
+    font-size: 14px;
+    color: var(--text)
+}
+
+.detail-panel .detail-body .section {
+    margin-bottom: 12px
+}
+
+.detail-panel .refs a {
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--accent)
+}
+
+.detail-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer
+}
+
+/* Subtle divider between filter types inside modal bodies
+   Use an adjacent-section rule so items inside the same section
+   (e.g., multiple checkboxes) are not separated. */
+.detail-panel .detail-body .section+.section {
+    /* slightly lighter divider in dark theme for better separation */
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.light .detail-panel .detail-body .section+.section {
+    /* light theme keeps a subtle darker divider */
+    border-top-color: rgba(2, 18, 34, 0.06);
+}
+
+/* Row wrapper for sections that have a control on the left and a reset action on the right
+   Keeps the left-side controls grouped (e.g., label + switch) and pins the reset button
+   to the right edge of the section. Allows wrapping on small viewports. */
+.detail-panel .detail-body .section-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.detail-panel .detail-body .section-row>div {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.clickable-row {
+    cursor: pointer
+}
+
+.clickable-row:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.18);
+    outline-offset: 2px
+}
+
+/* Small status dot used for SSH tunnel indicator */
+.status-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #ef4444;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.12)
+}
+
+.status-dot.running {
+    background: #10b981;
+    border-color: rgba(16, 185, 129, 0.18)
+}
+
+.status-dot.stopped {
+    background: #ef4444;
+    border-color: rgba(239, 68, 68, 0.18)
+}
+
+/* Accessibility helper: visually-hidden text (screen-reader only) */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important
+}
+
+/* Scan modal specific tweaks (reuses detail-modal styles) */
+#scanModal .detail-panel {
+    width: min(560px, calc(100% - 48px));
+}
+
+#scanModal .detail-body .meta-row {
+    margin-bottom: 8px
+}
+
+#scanModal .btn-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block
+}
+
+/* size the scan modal close icon */
+/* Larger close icon and slightly bigger clickable area for clarity */
+#scanModal .detail-close svg {
+    width: 18px;
+    height: 18px;
+    display: block
+}
+
+#scanModal .detail-close img {
+    width: 18px;
+    height: 18px;
+    display: block
+}
+
+#scanModal .detail-close {
+    padding: 8px 10px
+}
+
+/* remove visible border for scan modal close button (keeps padding for hit target) */
+#scanModal .detail-close {
+    background: transparent
+}
+
+
+/* Slightly larger folder icon for the Open button to improve visibility */
+#openBtn img {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+/* Scale up the clean (clear) icons used in buttons to improve recognizability */
+#clearLoaded img,
+#clearFilters img {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+/* General modal close icon sizing (themed close icon used across modals) */
+.detail-close img {
+    width: 18px;
+    height: 18px;
+    display: block
+}
+
+/* Slightly larger JFrog icon for the inline scan button */
+#startScanBtn img {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* Dark-mode scrollbar styling: make scrollbars darker and slimmer for visibility */
+body:not(.light) {
+    /* Firefox */
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-width: thin;
+}
+
+/* WebKit browsers (Chromium, Safari) */
+body:not(.light) ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+body:not(.light) ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body:not(.light) ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    /* creates padding so thumb doesn't touch track */
+    background-clip: padding-box;
+}
+
+body:not(.light) ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* Also ensure key scrollable regions follow the same look */
+.readme,
+.findings-container,
+.detail-panel {
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent
+}
+
+/* Light-mode scrollbar styling: ensure scrollbars are visible on light backgrounds */
+body.light {
+    /* Firefox */
+    scrollbar-color: rgba(2, 18, 34, 0.18) transparent;
+    scrollbar-width: thin;
+}
+
+/* WebKit browsers (Chromium, Safari) */
+body.light ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+body.light ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body.light ::-webkit-scrollbar-thumb {
+    background: rgba(2, 18, 34, 0.12);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    /* creates padding so thumb doesn't touch track */
+    background-clip: padding-box;
+}
+
+body.light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(2, 18, 34, 0.18);
+}
+
+/* Ensure key scrollable regions in light theme match the scrollbar colors */
+.light .readme,
+.light .findings-container,
+.light .detail-panel {
+    scrollbar-color: rgba(2, 18, 34, 0.18) transparent
+}

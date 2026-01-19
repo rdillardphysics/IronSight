@@ -1,0 +1,35 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:5173",
+    "distDir": "dist"
+  },
+  "package": {
+    "productName": "IronSight",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "identifier": "com.example.ironsight",
+      "active": true
+    },
+    "allowlist": {
+      "all": false,
+      "fs": { "all": true },
+      "dialog": { "all": true }
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "IronSight",
+        "width": 1200,
+        "height": 800,
+        "resizable": true
+      }
+    ],
+    "updater": { "active": false }
+  }
+}

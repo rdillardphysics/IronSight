@@ -1,0 +1,25 @@
+{
+  "name": "ironsight",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "a11y:pa11y": "pa11y http://localhost:5173 --reporter html",
+    "a11y:pa11y-json": "pa11y http://localhost:5173 --reporter json",
+    "a11y:axe": "node scripts/run-axe.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
+    "axe-core": "^4.11.1",
+    "http-server": "^14.1.1",
+    "pa11y": "^6.2.3",
+    "puppeteer": "^19.11.1",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.9.1"
+  }
+}

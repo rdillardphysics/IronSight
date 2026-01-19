@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "productName": "IronSight",
+  "version": "0.1.0",
+  "identifier": "com.ironsight.dev",
+  "build": {
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "IronSight",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "msi", "appimage"],
+    "icon": ["icons/icon.png"],
+    "resources": []
+  }
+}

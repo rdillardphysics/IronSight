@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IronSight — Xray Vulnerabilities Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+
+</head>
+
+<body>
+    <header>
+        <div id="themeToggleWrap" class="theme-toggle" aria-hidden="false">
+            <img id="themeIcon" class="theme-icon" aria-hidden="true" data-themed="true" data-icon="moon"
+                src="assets/icons/moon-dark.svg" alt="theme icon" />
+            <label class="switch" title="Toggle theme">
+                <input id="themeSwitch" type="checkbox" role="switch" aria-checked="false" />
+                <span class="sr-only">Toggle theme</span>
+                <span class="slider"></span>
+            </label>
+            <div class="btn-group" aria-label="App Settings and SSH tunneling">
+                <button id="startSshTunnelBtn" class="btn btn-primary btn-icon attached"
+                    aria-label="Start/Stop SSH Tunnel" title="Start/stop SSH tunnel to remote host">
+                    <img data-themed="true" data-icon="ssh" src="assets/icons/ssh-dark.svg" alt="SSH Tunnel" />
+                </button>
+                <button id="settingsBtn" class="btn btn-secondary btn-icon attached" title="Settings"
+                    aria-label="Open settings">
+                    <img data-themed="true" data-icon="settings" src="assets/icons/wrench-dark.svg" alt="Settings" />
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="controls">
+            <div class="input-group">
+                <label for="filePath" class="sr-only">Path to Xray findings JSON</label>
+                <input id="filePath" type="text" placeholder="/path/to/xray_findings.json" aria-label="Path to Xray findings JSON" />
+                <button id="loadBtn" class="btn btn-primary btn-icon attached"
+                    aria-label="Load vulnerabilities from path" title="Load vulnerabilities from path">
+                    <img data-themed="true" data-icon="path" src="assets/icons/path-dark.svg" alt="Load" />
+                </button>
+                <button id="openBtn" class="btn btn-secondary btn-icon attached" aria-label="Open file"
+                    title="Open a local Xray JSON file">
+                    <img data-themed="true" data-icon="folder" src="assets/icons/folder-dark.svg" alt="Open" />
+                </button>
+                <button id="clearLoaded" class="btn btn-ghost attached-text" aria-label="Clear loaded file"
+                    title="Clear loaded schema">
+                    <img data-themed="true" data-icon="clean" src="assets/icons/clean-dark.svg" alt="Clear" />
+                </button>
+            </div>
+            <input id="filePicker" type="file" accept="application/json" style="display:none" aria-hidden="true" tabindex="-1" />
+
+            <!-- Inline scan UI: aligned to the right of the controls row -->
+            <div class="scan-inline">
+                <div class="scan-ui">
+                    <button id="startScanBtn" class="btn btn-primary btn-icon" aria-label="Start Scan"
+                        title="Start JFrog Xray scan">
+                        <img data-themed="true" data-icon="jfrog-icon" src="assets/icons/jfrog-icon-dark.svg"
+                            alt="Start Scan" />
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Move scan UI inline into the controls row and align it to the right -->
+        <!-- The `.scan-inline` container will be appended inside `.controls` by markup below. -->
+
+        <div id="filters" class="filters hidden">
+            <!-- Simplified: only action buttons remain. Controls (severity/search) removed per request. -->
+            <button id="openFilters" class="btn btn-primary attached-text" title="Edit filters">
+                <img data-themed="true" data-icon="filter-edit" src="assets/icons/filter-edit-dark.svg" alt="Filters" />
+                <span class="btn-label"></span>
+            </button>
+            <button id="clearFilters" class="btn btn-ghost attached-text" title="Clear filters">
+                <img data-themed="true" data-icon="clean" src="assets/icons/clean-dark.svg" alt="Clear" />
+            </button>
+        </div>
+
+        <!-- Scan modal: prompts for image name before starting a scan -->
+        <div id="scanModal" class="detail-modal hidden" aria-hidden="true">
+            <div class="overlay" data-overlay></div>
+            <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+                <header>
+                    <h2 id="scanTitle">Start JFrog Xray Scan</h2>
+                    <div>
+                        <button class="detail-close" data-close aria-label="Close scan dialog">
+                            <img data-themed="true" data-icon="close" src="assets/icons/close-dark.svg" alt="Close" />
+                        </button>
+                    </div>
+                </header>
+                <div class="detail-body">
+                    <div class="section meta-row">
+                        <label for="scanImage">Image name:</label>
+                        <input id="scanImage" type="text" placeholder="e.g. myorg/myapp:latest"
+                            style="width:100%; margin-top:6px" />
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:12px">
+                    <button id="scanStartBtn" class="btn btn-primary btn-icon" title="Start scan" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true">
+                            <path d="M5 3v18l15-9L5 3z" fill="currentColor" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <section class="output-section">
+            <div id="output" class="hidden output-panel"></div>
+        </section>
+
+        <!-- Filters modal: opens when the Filters button is clicked -->
+        <div id="filtersModal" class="detail-modal hidden" aria-hidden="true">
+            <div class="overlay" data-overlay></div>
+            <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="filtersTitle">
+                <header>
+                    <h1 id="filtersTitle">Edit Filters</h1>
+                    <div>
+                        <button class="detail-close" data-close aria-label="Close filters">
+                            <img data-themed="true" data-icon="close" src="assets/icons/close-dark.svg" alt="Close" />
+                        </button>
+                    </div>
+                </header>
+                <div class="detail-body">
+                    <div class="section meta-row">
+                        <div class="section-row" style="align-items:center;gap:12px;">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <label for="presetName" class="path-label" style="margin:0">Preset name:</label>
+                                <div class="input-group" style="margin-left:8px; align-items:center">
+                                    <input id="presetName" type="text" placeholder="e.g. CI-critical-only" />
+                                    <button id="savePresetBtn" class="btn btn-primary btn-icon attached"
+                                        title="Save preset" aria-label="Save preset">
+                                        <img data-themed="true" data-icon="accept" src="assets/icons/accept-dark.svg"
+                                            alt="Save" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <select id="presetsList" aria-label="Saved presets" style="min-width:160px"></select>
+                                <button id="loadPresetBtn" class="btn btn-primary btn-icon" title="Load selected preset"
+                                    aria-label="Load selected preset">
+                                    <img data-themed="true" data-icon="accept" src="assets/icons/accept-dark.svg"
+                                        alt="Load" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section meta-row">
+                        <div class="section-row">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <label for="modalShowAll" style="margin:0">Show All:</label>
+                                <label class="switch inline" title="Show all severities">
+                                    <input id="modalShowAll" type="checkbox" checked />
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div id="modalSeverities" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox"
+                                        value="critical" />
+                                    Critical</label>
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox" value="high" />
+                                    High</label>
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox" value="medium" />
+                                    Medium</label>
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox" value="low" />
+                                    Low</label>
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox" value="info" />
+                                    Info</label>
+                            </div>
+                            <button id="modalResetShowAll" class="btn btn-ghost btn-icon" type="button"
+                                title="Reset Severity filter" aria-label="Reset Severity filter">
+                                <img data-themed="true" data-icon="filter-remove"
+                                    src="assets/icons/filter-remove-dark.svg" alt="Reset" />
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section meta-row">
+                        <div class="section-row">
+                            <label class="inline"><input id="modalFixOnly" type="checkbox" /> Fix available</label>
+                            <button id="modalResetFix" class="btn btn-ghost btn-icon" type="button"
+                                title="Reset Fix filter" aria-label="Reset Fix">
+                                <img data-themed="true" data-icon="filter-remove"
+                                    src="assets/icons/filter-remove-dark.svg" alt="Reset" />
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section meta-row" style="display:flex;flex-direction:column;gap:6px">
+                        <div class="section-row">
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <label for="modalQ" style="margin:0">Search:</label>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:12px;margin-left:8px">
+                                <label for="modalSearchMode" style="margin:0">Mode:</label>
+                                <select id="modalSearchMode" style="min-width:160px">
+                                    <option value="literal">Literal</option>
+                                    <option value="fuzzy">Fuzzy</option>
+                                    <option value="regex">Regex</option>
+                                </select>
+                            </div>
+                            <button id="modalResetQ" class="btn btn-ghost btn-icon" type="button" title="Reset Search"
+                                aria-label="Reset Search">
+                                <img data-themed="true" data-icon="filter-remove"
+                                    src="assets/icons/filter-remove-dark.svg" alt="Reset" />
+                            </button>
+                        </div>
+                        <input id="modalQ" type="text" placeholder="Search package / CVE"
+                            style="width:100%; margin-top:6px" />
+                        <div class="rules" style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+                            <div style="flex:1 1 45%">
+                                <label for="modalWhitelist"
+                                    style="font-weight:600;margin-bottom:6px;display:block">Whitelist (include
+                                    only)</label>
+                                <textarea id="modalWhitelist"
+                                    placeholder="One rule per line (field:value or general)"></textarea>
+                                <div style="font-size:12px; color:var(--muted-color, #6b6b6b); margin-top:6px">When
+                                    non-empty, only findings matching any whitelist rule are shown.</div>
+                            </div>
+                            <div style="flex:1 1 45%">
+                                <label for="modalBlacklist" style="font-weight:600;margin-bottom:6px;display:block">Blacklist
+                                    (exclude)</label>
+                                <textarea id="modalBlacklist"
+                                    placeholder="One rule per line (field:value or general)"></textarea>
+                                <div style="font-size:12px; color:var(--muted-color, #6b6b6b); margin-top:6px">Rules are
+                                    matched case-insensitive. Prefix with <code>/.../</code> to use a regex.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group" aria-label="Filter actions">
+                        <button id="modalReset" class="btn btn-primary btn-icon" type="button" title="Reset filters"
+                            aria-label="Reset all filters">
+                            <img data-themed="true" data-icon="undo" src="assets/icons/undo-dark.svg" alt="Reset" />
+                        </button>
+                        <button id="modalApply" class="btn btn-primary btn-icon" title="Apply filters"
+                            aria-label="Apply filters">
+                            <img data-themed="true" data-icon="accept" src="assets/icons/accept-dark.svg" alt="Apply" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings modal -->
+        <div id="settingsModal" class="detail-modal hidden" aria-hidden="true">
+            <div class="overlay" data-overlay></div>
+            <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+                <header>
+                    <h2 id="settingsTitle">Settings</h2>
+                    <div>
+                        <button class="detail-close" data-close aria-label="Close settings">
+                            <img data-themed="true" data-icon="close" src="assets/icons/close-dark.svg" alt="Close" />
+                        </button>
+                    </div>
+                </header>
+                <div class="detail-body">
+                    <div class="section meta-row">
+                        <label for="accessibilityToggle" style="font-weight:600">Accessibility features</label>
+                        <div style="margin-top:8px; display:flex; align-items:center; gap:12px">
+                            <label class="switch" title="Toggle accessibility features">
+                                <input id="accessibilityToggle" type="checkbox" />
+                                <span class="slider"></span>
+                            </label>
+                            <div style="font-size:13px; color:var(--muted)">Enable keyboard navigation, focus traps, and
+                                modal inerting.</div>
+                        </div>
+                    </div>
+                        <div class="section meta-row" style="margin-top:10px">
+                            <label style="font-weight:600">Keyboard Shortcuts</label>
+                            <div style="margin-top:8px; display:flex;align-items:center;gap:12px">
+                                <label class="switch" title="Toggle keyboard shortcuts">
+                                    <input id="shortcutsToggle" type="checkbox" />
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div style="font-size:13px; color:var(--muted); margin-top:6px">Enable or disable single-key and chord keyboard shortcuts.</div>
+                        </div>
+                    <div class="section meta-row" style="margin-top:10px">
+                        <label style="font-weight:600">SSH Tunnelling</label>
+                        <div style="margin-top:8px; display:flex;flex-direction:column;gap:8px">
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label for="sshIp" style="min-width:80px">IP / Host</label>
+                                <input id="sshIp" type="text" placeholder="e.g. 10.0.0.5" style="flex:1" />
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label for="sshUser" style="min-width:80px">Username</label>
+                                <input id="sshUser" type="text" placeholder="e.g. deploy" style="flex:1" />
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label for="sshPassword" style="min-width:80px">Password</label>
+                                <input id="sshPassword" type="password" placeholder="(stored securely)"
+                                    style="flex:1" />
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button id="saveSshBtn" class="btn btn-primary btn-icon"
+                                    title="Save SSH credential">Save</button>
+                                <button id="clearSshBtn" class="btn btn-ghost btn-icon"
+                                    title="Clear stored password">Clear Password</button>
+                                <div id="sshStatus" style="font-size:13px;color:var(--muted);margin-left:8px">Password:
+                                    <span id="sshStoredStatus">unknown</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Keyboard Shortcuts Help Modal removed -->
+
+    <script type="module" src="./index.js"></script>
+</body>
+
+</html>
