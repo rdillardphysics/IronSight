@@ -1911,6 +1911,23 @@ function setupSettings() {
   const accessToggle = document.getElementById('accessibilityToggle')
   const shortcutsToggle = document.getElementById('shortcutsToggle')
 
+  function setShortcutFooterVisible(visible) {
+    const footer = document.querySelector('.shortcut-footer')
+    if (!footer) return
+    if (visible) footer.classList.remove('hidden')
+    else footer.classList.add('hidden')
+  }
+
+  function syncShortcutFooterFromStorage() {
+    // Default to enabled when key absent
+    let enabled = true
+    try {
+      const s = localStorage.getItem('shortcuts_enabled')
+      enabled = (s === null ? true : (s !== 'false'))
+    } catch (e) { }
+    setShortcutFooterVisible(enabled)
+  }
+
   // SSH settings elements
   const sshIpInput = document.getElementById('sshIp')
   const sshUserInput = document.getElementById('sshUser')
@@ -1930,6 +1947,7 @@ function setupSettings() {
       const s = localStorage.getItem('shortcuts_enabled')
       if (shortcutsToggle) shortcutsToggle.checked = (s === null ? true : (s !== 'false'))
     } catch (e) { }
+    syncShortcutFooterFromStorage()
     // populate SSH fields from localStorage
     try {
       const ip = localStorage.getItem('ssh_ip') || ''
@@ -1983,6 +2001,7 @@ function setupSettings() {
     shortcutsToggle.addEventListener('change', (e) => {
       const on = !!e.target.checked
       try { localStorage.setItem('shortcuts_enabled', on ? 'true' : 'false') } catch (err) { }
+      setShortcutFooterVisible(on)
     })
   }
 
@@ -2031,6 +2050,18 @@ function setupSettings() {
 
 window.addEventListener('DOMContentLoaded', () => {
   setupSettings()
+})
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Ensure footer reflects current shortcuts setting on initial load
+  try {
+    const footer = document.querySelector('.shortcut-footer')
+    if (!footer) return
+    const s = localStorage.getItem('shortcuts_enabled')
+    const on = (s === null ? true : (s !== 'false'))
+    if (on) footer.classList.remove('hidden')
+    else footer.classList.add('hidden')
+  } catch (e) { }
 })
 
 document.addEventListener('DOMContentLoaded', () => {
