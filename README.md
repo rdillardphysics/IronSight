@@ -37,6 +37,7 @@ Back to [Contents](#contents)
 ##### Keyboard Navigation
 
 - `b` → Open the Edit Filters pop up and focus on the Blacklist box
+- `c` + `a` → Close all pop ups
 - `c` + `f` → Clear the filters
 - `c` + `v` → Clear the vulnerabilities table
 - `f` → Open the Edit Filters pop up
@@ -48,7 +49,7 @@ Back to [Contents](#contents)
 - `w` → Open the Edit Filters pop up and focus on the Whitelist box
 - `/` → Open the Edit Filters pop up and focus on the Search box
 - `↑` and `↓` → Navigate up and down the vulnerabilities table
-- `esc` → Exit any open pop up
+- `esc` → Close top-level pop up
 
 Back to [Contents](#contents)
 
