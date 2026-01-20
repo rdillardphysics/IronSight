@@ -32,12 +32,15 @@ import sshDark from './assets/icons/ssh-dark.svg'
 import sshLight from './assets/icons/ssh-light.svg'
 import readmeDark from './assets/icons/readme-dark.svg'
 import readmeLight from './assets/icons/readme-light.svg'
+import saveDark from './assets/icons/save-dark.svg'
+import saveLight from './assets/icons/save-light.svg'
 
 const ICON_MAP = {
   moon: { dark: moonDark, light: moonLight },
   path: { dark: pathDark, light: pathLight },
   folder: { dark: folderDark, light: folderLight },
   clean: { dark: cleanDark, light: cleanLight },
+  save: { dark: saveDark, light: saveLight },
   icon: { dark: iconDark, light: iconLight },
   'filter-remove': { dark: filterRemoveDark, light: filterRemoveLight },
   'filter-edit': { dark: filterEditDark, light: filterEditLight },

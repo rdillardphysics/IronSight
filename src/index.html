@@ -289,25 +289,28 @@
                         <label style="font-weight:600">SSH Tunnelling</label>
                         <div style="margin-top:8px; display:flex;flex-direction:column;gap:8px">
                             <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshIp" style="min-width:80px">IP / Host</label>
+                                <label for="sshIp" style="min-width:75px">IP / Host</label>
                                 <input id="sshIp" type="text" placeholder="e.g. 10.0.0.5" style="flex:1" />
                             </div>
                             <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshUser" style="min-width:80px">Username</label>
+                                <label for="sshUser" style="min-width:75px">Username</label>
                                 <input id="sshUser" type="text" placeholder="e.g. deploy" style="flex:1" />
                             </div>
                             <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshPassword" style="min-width:80px">Password</label>
-                                <input id="sshPassword" type="password" placeholder="(stored securely)"
-                                    style="flex:1" />
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <button id="saveSshBtn" class="btn btn-primary btn-icon"
-                                    title="Save SSH credential">Save</button>
-                                <button id="clearSshBtn" class="btn btn-ghost btn-icon"
-                                    title="Clear stored password">Clear Password</button>
-                                <div id="sshStatus" style="font-size:13px;color:var(--muted);margin-left:8px">Password:
-                                    <span id="sshStoredStatus">unknown</span>
+                                <label for="sshPassword" style="min-width:75px">Password</label>
+                                <div class="input-group" style="flex:1">
+                                    <input id="sshPassword" type="password" placeholder="(stored securely)"
+                                        style="flex:1;min-width:0" />
+                                    <button id="saveSshBtn" class="btn btn-primary btn-icon attached"
+                                        title="Save SSH credential" aria-label="Save SSH credential">
+                                        <img data-themed="true" data-icon="save" src="assets/icons/save-dark.svg"
+                                            alt="Save" />
+                                    </button>
+                                    <button id="clearSshBtn" class="btn btn-ghost btn-icon attached"
+                                        title="Clear stored password" aria-label="Clear stored password">
+                                        <img data-themed="true" data-icon="clean" src="assets/icons/clean-dark.svg"
+                                            alt="Clear" />
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -4,6 +4,7 @@ IronSight is a native desktop app for viewing JFrog Xray container-scan findings
 
 ## Contents
 
+- [Release Version](#release-version)
 - [Settings](#settings)
     - [Accessibility](#accessibility)
         - [Keyboard Navigation](#keyboard-navigation)
@@ -19,9 +20,15 @@ IronSight is a native desktop app for viewing JFrog Xray container-scan findings
     - [By Severity](#by-severity)
     - [By Package or CVEs](#by-package-or-cves)
     - [By Fixes Available](#by-fixes-available)
+    - [By Whitelist](#by-whitelist)
+    - [By Blacklist](#by-blacklist)
 - [Clearing Filters](#clearing-filters)
 - [Initiating a JFrog Xray Scan](#initiating-a-jfrog-xray-scan)
 - [Currently Supported Vulnerabilities Schema](#currently-supported-vulnerabilities-schema)
+
+### Release Version
+
+v0.1.0
 
 ### Settings
 
@@ -111,7 +118,7 @@ Back to [Contents](#contents)
 
 ### Viewing Vulnerability Details
 
-Click on any of the Vulnerabilities to open a pop up to view further details. This includes, if provided, a description of the vulnerability, clickable [Reference Links](#reference-links), and metadata which includes the impact paths, impacted package type, and severity as determined by JFrog.
+Click or navigate the Vulnerabilities table with the `up` and `down` arrows and hit `Enter` - see [Keyboard Navigation](#keyboard-navigation) - on any of the Vulnerabilities to open a pop up to view further details. This includes, if provided, a description of the vulnerability, clickable [Reference Links](#reference-links), and metadata which includes the impact paths, impacted package type, and severity as determined by JFrog.
 
 Back to [Contents](#contents)
 
@@ -127,7 +134,7 @@ Back to [Contents](#contents)
 
 ### Filtering a Vulnerabilities JSON
 
-Use the filters to narrow results by clicking the Edit filters icon button.  Once the desired filters have been set, click the Apply filters button in the bottom right of the Edit Filters pop up.
+Use the filters to narrow results by clicking the Edit filters icon button or pressing `f`, if keyboard shortcuts are enabled - see [Keyboard Navigation](#keyboard-navigation).  Once the desired filters have been set, click the Apply filters button in the bottom right of the Edit Filters pop up.
 
 Back to [Contents](#contents)
 
@@ -168,7 +175,6 @@ Back to [Contents](#contents)
 
 ---
 
-<a id="by-fixes-available"></a>
 #### By Fixes Available
 
 Hit this checkbox to only show vulnerabilities that have fix versions noted for the affected package.
@@ -179,9 +185,50 @@ Back to [Contents](#contents)
 
 ---
 
+#### By Search
+
+There are three (3) options for searching here:
+
+- Literal - Exact matching only of substrings → `open` will return `openssl`
+- Fuzzy - Approximate strings will return results → `opns` will still return `openssl`
+- Regex - Utilize special tokens to find complex structures in substrings → `.` will return everything, while `op` will only return vulnerabilities with the "op" substring.
+
+Back to [Contents](#contents)
+
+---
+
+#### By Whitelist
+
+Create a list of whitelist rules to include only the vulnerabilities that match them.
+
+These can be scoped with a field, such as trying to only view the openssl package like this:
+
+`package:openssl`
+
+Or using literal substrings.
+
+Back to [Contents](#contents)
+
+---
+
+#### By Blacklist
+
+Create a list of blacklist rules to exclude the vulnerabilities that match them.
+
+These can be scoped with a field, such as trying to exclude the openssl package like this:
+
+`package:openssl`
+
+Or using literal substrings.
+
+Back to [Contents](#contents)
+
+---
+
+
 ### Clearing Filters
 
-Click the Clear filters button next to the Edit filters button.
+Click the Clear filters button next to the Edit filters button or using a keyboard shortcut chord: `c` + `f`.
 
 Back to [Contents](#contents)
 
@@ -189,7 +236,7 @@ Back to [Contents](#contents)
 
 ### Initiating a JFrog Xray Scan
 
-***TODO***
+***Coming Soon***
 
 Back to [Contents](#contents)
 
