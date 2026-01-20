@@ -255,7 +255,3 @@ Back to [Contents](#contents)
 ```
 
 Back to [Contents](#contents)
-
-I can run pa11y and attach its report, or
-I can finalize the VoiceOver/NVDA checklist and mark all accessibility tasks done, or
-I can manually inspect and try to resolve the contrast/overlap notes flagged as “partially obscured.”
