@@ -15,15 +15,13 @@ if (!command) {
   process.exit(2);
 }
 
-// Prefer the locally installed Tauri CLI binary to avoid PATH/npx resolution issues in CI.
-const tauriBin = path.resolve(
-  rootDir,
-  'node_modules',
-  '.bin',
-  process.platform === 'win32' ? 'tauri.cmd' : 'tauri'
-);
+// Prefer the locally installed Tauri CLI entrypoint to avoid PATH/npx resolution issues in CI.
+// On Windows, do NOT spawn the `.cmd` shim directly (can fail under bash with EINVAL);
+// instead run the JS shim via `node`.
+const tauriJsShim = path.resolve(rootDir, 'node_modules', '.bin', 'tauri');
+const tauriCmdShim = path.resolve(rootDir, 'node_modules', '.bin', 'tauri.cmd');
 
-let execFile = tauriBin;
+let execFile;
 
 const supportsConfig = command === 'dev' || command === 'build';
 let args = supportsConfig
@@ -31,8 +29,25 @@ let args = supportsConfig
   : [command, ...restArgs];
 
 // Fallback to npx if the local bin isn't present (e.g. deps not installed).
-if (!fs.existsSync(tauriBin)) {
-  execFile = process.platform === 'win32' ? 'npx' : 'npx';
+if (process.platform === 'win32') {
+  if (fs.existsSync(tauriJsShim)) {
+    execFile = process.execPath;
+    args = [tauriJsShim, ...args];
+  } else if (fs.existsSync(tauriCmdShim)) {
+    // As a last resort, run the .cmd shim via cmd.exe.
+    execFile = process.env.ComSpec || 'cmd.exe';
+    const cmdLine = `"${tauriCmdShim}" ${args.map((a) => `"${a.replaceAll('"', '\\"')}"`).join(' ')}`;
+    args = ['/d', '/s', '/c', cmdLine];
+  } else {
+    execFile = 'npx';
+    args = supportsConfig
+      ? ['tauri', command, '--config', 'tauri.conf.json', ...restArgs]
+      : ['tauri', command, ...restArgs];
+  }
+} else if (fs.existsSync(tauriJsShim)) {
+  execFile = tauriJsShim;
+} else {
+  execFile = 'npx';
   args = supportsConfig
     ? ['tauri', command, '--config', 'tauri.conf.json', ...restArgs]
     : ['tauri', command, ...restArgs];
