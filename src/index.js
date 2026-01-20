@@ -879,7 +879,14 @@ function renderFindings(data) {
     imageDisplay = imageSrc.name
     if (imageSrc.version) imageDisplay = `${imageDisplay}:${imageSrc.version}`
   }
-  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay} — <strong>Vulnerabilities:</strong> ${filtered.length}`
+  // Prefer explicit totals if provided by the JSON; otherwise count filtered results
+  const totals = (data && data.totalVulnerabilities) ? data.totalVulnerabilities : null
+  const criticalCount = totals && Number.isFinite(Number(totals.critical)) ? Number(totals.critical) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'critical').length
+  const highCount = totals && Number.isFinite(Number(totals.high)) ? Number(totals.high) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'high').length
+  const mediumCount = totals && Number.isFinite(Number(totals.medium)) ? Number(totals.medium) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'medium').length
+  const lowCount = totals && Number.isFinite(Number(totals.low)) ? Number(totals.low) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'low').length
+
+  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay} — <strong>Vulnerabilities:</strong> <strong>Critical:</strong> ${criticalCount} <strong>High:</strong> ${highCount} <strong>Medium:</strong> ${mediumCount} <strong>Low:</strong> ${lowCount}`
   out.appendChild(meta)
 
   // Move the filters element into the output panel so it displays directly
