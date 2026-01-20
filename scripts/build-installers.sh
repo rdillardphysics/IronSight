@@ -67,8 +67,6 @@ fi
 echo "Building frontend (vite)..."
 npm run build
 
-cd src-tauri
-
 # Map logical target names to Rust target triples (used for cross builds).
 map_target_triple() {
 	case "$1" in
@@ -87,8 +85,8 @@ run_tauri_build_for() {
 	echo "\n=== Building installer for: $tgt ==="
 	if [[ "$tgt" == "$HOST_OS" ]]; then
 		# Host build (no explicit target triple)
-		echo "Running: cargo tauri build"
-		cargo tauri build
+		echo "Running: npm run tauri:build"
+		npm run tauri:build
 	else
 		# Attempt cross-build using Rust --target if a mapping exists
 		local triple
@@ -103,8 +101,8 @@ run_tauri_build_for() {
 				echo "Failed to add rust target ${triple}. Skipping $tgt build." && return
 			fi
 		fi
-		echo "Running cross build: cargo tauri build --target ${triple}"
-		if ! cargo tauri build --target "${triple}"; then
+		echo "Running cross build: npm run tauri:build -- --target ${triple}"
+		if ! npm run tauri:build -- --target "${triple}"; then
 			echo "Cross-build for ${tgt} failed. See output above for details." && return
 		fi
 	fi

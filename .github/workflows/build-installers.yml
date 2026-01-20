@@ -112,8 +112,13 @@ jobs:
         shell: powershell
         run: |
           choco install -y nsis 7zip msys2
-          # Ensure chocolatey path is available
-          refreshenv || true
+          # Best-effort refresh of PATH for the current session
+          try {
+            Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1" -ErrorAction Stop
+            refreshenv
+          } catch {
+            Write-Host "refreshenv unavailable; continuing"
+          }
 
       - name: (Windows) Add Rust targets and prepare MSYS2 toolchain
         if: matrix.os == 'windows-latest'
