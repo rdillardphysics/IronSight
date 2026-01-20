@@ -148,7 +148,7 @@ jobs:
       - name: Run installer build script
         # Use bash on unix runners; on Windows use bash available on the runner
         shell: bash
-        run: ./scripts/build-installers.sh
+        run: bash ./scripts/build-installers.sh
 
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
