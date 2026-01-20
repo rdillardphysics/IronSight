@@ -1,4 +1,3 @@
-
 {
     "vulnerabilities": [
         {
@@ -11,7 +10,7 @@
                     "name": "some_sha256.tar",
                     "version": "",
                     "location": {
-                    "file": "some_sha256.tar"
+                        "file": "some_sha256.tar"
                     }
                 }
             ],
@@ -35,7 +34,7 @@
             "impactPaths": [
                 [
                     {
-                        "name": "git.grid/container-images/datahub/datahub-actions",
+                        "name": "container-images/datahub/datahub-actions",
                         "version": "8.0.2-101394"
                     },
                     {
@@ -67,24 +66,48 @@
                 {
                     "name": "openssl-1.1.1k.rpm",
                     "version": "1.1.1k",
-                    "location": { "file": "openssl-1.1.1k.rpm" }
+                    "location": {
+                        "file": "openssl-1.1.1k.rpm"
+                    }
                 }
             ],
             "summary": "OpenSSL: buffer overflow in TLS parsing leads to remote code execution",
             "applicable": "",
-            "fixedVersions": ["1.1.1l"],
+            "fixedVersions": [
+                "1.1.1l"
+            ],
             "cves": [
-                { "id": "CVE-2025-0001", "cvssV3": "9.8", "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "cwe": ["CWE-119"] }
+                {
+                    "id": "CVE-2025-0001",
+                    "cvssV3": "9.8",
+                    "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                    "cwe": [
+                        "CWE-119"
+                    ]
+                }
             ],
             "issueId": "XRAY-100001",
-            "references": [ "https://example.com/CVE-2025-0001" ],
+            "references": [
+                "https://example.com/CVE-2025-0001"
+            ],
             "impactPaths": [
                 [
-                    { "name": "git.grid/container-images/datahub/datahub-images", "version": "9.1.0" },
-                    { "name": "openssl-1.1.1k.rpm", "version": "1.1.1k", "location": { "file": "openssl-1.1.1k.rpm" } }
+                    {
+                        "name": "container-images/datahub/datahub-images",
+                        "version": "9.1.0"
+                    },
+                    {
+                        "name": "openssl-1.1.1k.rpm",
+                        "version": "1.1.1k",
+                        "location": {
+                            "file": "openssl-1.1.1k.rpm"
+                        }
+                    }
                 ]
             ],
-            "jfrogResearcInformation": { "severity": "" }
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "High",
@@ -92,121 +115,370 @@
             "impactedPackageVersion": "2.14.1",
             "impactedPackageType": "MAVEN",
             "components": [
-                { "name": "log4j-core-2.14.1.jar", "version": "2.14.1", "location": { "file": "log4j-core-2.14.1.jar" } }
+                {
+                    "name": "log4j-core-2.14.1.jar",
+                    "version": "2.14.1",
+                    "location": {
+                        "file": "log4j-core-2.14.1.jar"
+                    }
+                }
             ],
             "summary": "log4j: JNDI lookup leading to remote code execution",
             "applicable": "",
-            "fixedVersions": ["2.17.0"],
-            "cves": [ { "id": "CVE-2021-44228", "cvssV3": "10.0", "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H", "cwe": ["CWE-20"] } ],
+            "fixedVersions": [
+                "2.17.0"
+            ],
+            "cves": [
+                {
+                    "id": "CVE-2021-44228",
+                    "cvssV3": "10.0",
+                    "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+                    "cwe": [
+                        "CWE-20"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100002",
-            "references": [ "https://example.com/CVE-2021-44228" ],
-            "impactPaths": [ [ { "name": "github.com/example/app", "version": "1.2.3" }, { "name": "log4j-core-2.14.1.jar", "version": "2.14.1" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2021-44228"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "github.com/example/app",
+                        "version": "1.2.3"
+                    },
+                    {
+                        "name": "log4j-core-2.14.1.jar",
+                        "version": "2.14.1"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Medium",
             "impactedPackageName": "glibc-common",
             "impactedPackageVersion": "0:2.31-0ubuntu9.2",
             "impactedPackageType": "DEB",
-            "components": [ { "name": "glibc-common.deb", "version": "2.31", "location": { "file": "glibc-common.deb" } } ],
+            "components": [
+                {
+                    "name": "glibc-common.deb",
+                    "version": "2.31",
+                    "location": {
+                        "file": "glibc-common.deb"
+                    }
+                }
+            ],
             "summary": "glibc: integer underflow in malloc implementation",
             "applicable": "",
             "fixedVersions": null,
-            "cves": [ { "id": "CVE-2023-1234", "cvssV3": "5.5", "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N", "cwe": ["CWE-190"] } ],
+            "cves": [
+                {
+                    "id": "CVE-2023-1234",
+                    "cvssV3": "5.5",
+                    "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N",
+                    "cwe": [
+                        "CWE-190"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100003",
-            "references": [ "https://example.com/CVE-2023-1234" ],
-            "impactPaths": [ [ { "name": "registry.example.com/project/image", "version": "2.0.0" }, { "name": "glibc-common.deb", "version": "2.31" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2023-1234"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "registry.example.com/project/image",
+                        "version": "2.0.0"
+                    },
+                    {
+                        "name": "glibc-common.deb",
+                        "version": "2.31"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Low",
             "impactedPackageName": "httpclient",
             "impactedPackageVersion": "4.5.6",
             "impactedPackageType": "MAVEN",
-            "components": [ { "name": "httpclient-4.5.6.jar", "version": "4.5.6", "location": { "file": "httpclient-4.5.6.jar" } } ],
+            "components": [
+                {
+                    "name": "httpclient-4.5.6.jar",
+                    "version": "4.5.6",
+                    "location": {
+                        "file": "httpclient-4.5.6.jar"
+                    }
+                }
+            ],
             "summary": "HTTPClient: potential information disclosure via headers",
             "applicable": "",
-            "fixedVersions": ["4.5.13"],
-            "cves": [ { "id": "CVE-2022-2002", "cvssV3": "3.1", "cvssV3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N", "cwe": ["CWE-200"] } ],
+            "fixedVersions": [
+                "4.5.13"
+            ],
+            "cves": [
+                {
+                    "id": "CVE-2022-2002",
+                    "cvssV3": "3.1",
+                    "cvssV3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+                    "cwe": [
+                        "CWE-200"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100004",
-            "references": [ "https://example.com/CVE-2022-2002" ],
-            "impactPaths": [ [ { "name": "git.grid/frontend/frontend-actions", "version": "1.0.0" }, { "name": "httpclient-4.5.6.jar", "version": "4.5.6" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2022-2002"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "frontend/frontend-actions",
+                        "version": "1.0.0"
+                    },
+                    {
+                        "name": "httpclient-4.5.6.jar",
+                        "version": "4.5.6"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Low",
             "impactedPackageName": "openssl-docs",
             "impactedPackageVersion": "1.1.1k-docs",
             "impactedPackageType": "DOC",
-            "components": [ { "name": "openssl-docs.tar.gz", "version": "1.1.1k", "location": { "file": "openssl-docs.tar.gz" } } ],
+            "components": [
+                {
+                    "name": "openssl-docs.tar.gz",
+                    "version": "1.1.1k",
+                    "location": {
+                        "file": "openssl-docs.tar.gz"
+                    }
+                }
+            ],
             "summary": "Documentation mentions deprecated APIs",
             "applicable": "",
             "fixedVersions": null,
             "cves": [],
             "issueId": "XRAY-100005",
             "references": [],
-            "impactPaths": [ [ { "name": "some.registry/some/repo", "version": "0.1.0" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "impactPaths": [
+                [
+                    {
+                        "name": "some.registry/some/repo",
+                        "version": "0.1.0"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "High",
             "impactedPackageName": "nginx",
             "impactedPackageVersion": "1.18.0",
             "impactedPackageType": "RPM",
-            "components": [ { "name": "nginx-1.18.0.rpm", "version": "1.18.0", "location": { "file": "nginx-1.18.0.rpm" } } ],
+            "components": [
+                {
+                    "name": "nginx-1.18.0.rpm",
+                    "version": "1.18.0",
+                    "location": {
+                        "file": "nginx-1.18.0.rpm"
+                    }
+                }
+            ],
             "summary": "nginx: request smuggling vulnerability under certain configurations",
             "applicable": "",
-            "fixedVersions": ["1.18.0-1"],
-            "cves": [ { "id": "CVE-2024-2003", "cvssV3": "7.5", "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "cwe": ["CWE-400"] } ],
+            "fixedVersions": [
+                "1.18.0-1"
+            ],
+            "cves": [
+                {
+                    "id": "CVE-2024-2003",
+                    "cvssV3": "7.5",
+                    "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+                    "cwe": [
+                        "CWE-400"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100006",
-            "references": [ "https://example.com/CVE-2024-2003" ],
-            "impactPaths": [ [ { "name": "git.grid/proxy/proxy-image", "version": "3.2.1" }, { "name": "nginx-1.18.0.rpm", "version": "1.18.0" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2024-2003"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "proxy/proxy-image",
+                        "version": "3.2.1"
+                    },
+                    {
+                        "name": "nginx-1.18.0.rpm",
+                        "version": "1.18.0"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Medium",
             "impactedPackageName": "python-requests",
             "impactedPackageVersion": "2.22.0",
             "impactedPackageType": "PIP",
-            "components": [ { "name": "requests-2.22.0.tar.gz", "version": "2.22.0", "location": { "file": "requests-2.22.0.tar.gz" } } ],
+            "components": [
+                {
+                    "name": "requests-2.22.0.tar.gz",
+                    "version": "2.22.0",
+                    "location": {
+                        "file": "requests-2.22.0.tar.gz"
+                    }
+                }
+            ],
             "summary": "requests: TLS hostname verification bypass in specific versions",
             "applicable": "",
-            "fixedVersions": ["2.25.1"],
-            "cves": [ { "id": "CVE-2020-0002", "cvssV3": "6.5", "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N", "cwe": ["CWE-295"] } ],
+            "fixedVersions": [
+                "2.25.1"
+            ],
+            "cves": [
+                {
+                    "id": "CVE-2020-0002",
+                    "cvssV3": "6.5",
+                    "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+                    "cwe": [
+                        "CWE-295"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100007",
-            "references": [ "https://example.com/CVE-2020-0002" ],
-            "impactPaths": [ [ { "name": "dockerhub/library/python-app", "version": "0.9.0" }, { "name": "requests-2.22.0.tar.gz", "version": "2.22.0" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2020-0002"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "dockerhub/library/python-app",
+                        "version": "0.9.0"
+                    },
+                    {
+                        "name": "requests-2.22.0.tar.gz",
+                        "version": "2.22.0"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Low",
             "impactedPackageName": "bash",
             "impactedPackageVersion": "5.0-6ubuntu1",
             "impactedPackageType": "DEB",
-            "components": [ { "name": "bash_5.0.deb", "version": "5.0", "location": { "file": "bash_5.0.deb" } } ],
+            "components": [
+                {
+                    "name": "bash_5.0.deb",
+                    "version": "5.0",
+                    "location": {
+                        "file": "bash_5.0.deb"
+                    }
+                }
+            ],
             "summary": "bash: minor info leak in certain prompt settings",
             "applicable": "",
             "fixedVersions": null,
-            "cves": [ { "id": "CVE-2022-3003", "cvssV3": "2.1", "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N", "cwe": ["CWE-200"] } ],
+            "cves": [
+                {
+                    "id": "CVE-2022-3003",
+                    "cvssV3": "2.1",
+                    "cvssV3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+                    "cwe": [
+                        "CWE-200"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100008",
-            "references": [ "https://example.com/CVE-2022-3003" ],
-            "impactPaths": [ [ { "name": "some.registry/other/repo", "version": "5.0" }, { "name": "bash_5.0.deb", "version": "5.0" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2022-3003"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "some.registry/other/repo",
+                        "version": "5.0"
+                    },
+                    {
+                        "name": "bash_5.0.deb",
+                        "version": "5.0"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         },
         {
             "severity": "Critical",
             "impactedPackageName": "kernel",
             "impactedPackageVersion": "5.10.0-1",
             "impactedPackageType": "RPM",
-            "components": [ { "name": "kernel-5.10.0.rpm", "version": "5.10.0", "location": { "file": "kernel-5.10.0.rpm" } } ],
+            "components": [
+                {
+                    "name": "kernel-5.10.0.rpm",
+                    "version": "5.10.0",
+                    "location": {
+                        "file": "kernel-5.10.0.rpm"
+                    }
+                }
+            ],
             "summary": "Linux kernel: local privilege escalation via crafted syscall",
             "applicable": "",
-            "fixedVersions": ["5.10.0-2"],
-            "cves": [ { "id": "CVE-2024-9998", "cvssV3": "8.8", "cvssV3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H", "cwe": ["CWE-264"] } ],
+            "fixedVersions": [
+                "5.10.0-2"
+            ],
+            "cves": [
+                {
+                    "id": "CVE-2024-9998",
+                    "cvssV3": "8.8",
+                    "cvssV3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+                    "cwe": [
+                        "CWE-264"
+                    ]
+                }
+            ],
             "issueId": "XRAY-100009",
-            "references": [ "https://example.com/CVE-2024-9998" ],
-            "impactPaths": [ [ { "name": "git.grid/kernel/kernel-image", "version": "1.0.0" }, { "name": "kernel-5.10.0.rpm", "version": "5.10.0" } ] ],
-            "jfrogResearcInformation": { "severity": "" }
+            "references": [
+                "https://example.com/CVE-2024-9998"
+            ],
+            "impactPaths": [
+                [
+                    {
+                        "name": "kernel/kernel-image",
+                        "version": "1.0.0"
+                    },
+                    {
+                        "name": "kernel-5.10.0.rpm",
+                        "version": "5.10.0"
+                    }
+                ]
+            ],
+            "jfrogResearcInformation": {
+                "severity": ""
+            }
         }
     ],
     "securityViolations": null,
@@ -230,5 +502,9 @@
         "high": 3,
         "medium": 2,
         "low": 3
+    },
+    "image_details": {
+        "repository": "datahub-actions",
+        "tag": "8.0.3-101842"
     }
 }

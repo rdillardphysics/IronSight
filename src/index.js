@@ -1131,9 +1131,15 @@ function transformVulnerabilitiesClient(parsed) {
   if (!parsed) return parsed
   if (parsed.findings) return parsed
   if (!parsed.vulnerabilities || !Array.isArray(parsed.vulnerabilities)) return parsed
-  const registryPrefix = 'git.grid'
   let detectedImageName = null
   let detectedImageVersion = null
+
+  // Prefer explicit image_details if provided by the JSON (repository + tag)
+  if (parsed.image_details && parsed.image_details.repository) {
+    const repo = String(parsed.image_details.repository || '')
+    detectedImageName = repo.includes('/') ? repo.split('/').pop() : repo
+    detectedImageVersion = parsed.image_details.tag || null
+  }
 
   const findings = parsed.vulnerabilities.map((entry, i) => {
     const id = entry.issueId || `vuln-${i}`
@@ -1183,23 +1189,27 @@ function transformVulnerabilitiesClient(parsed) {
     }
   })
 
-  // scan vulnerability entries for impactPaths matching our registry prefix to detect image
-  for (const entry of (parsed.vulnerabilities || [])) {
-    if (!detectedImageName && entry.impactPaths && Array.isArray(entry.impactPaths)) {
-      for (const seq of entry.impactPaths) {
-        if (!Array.isArray(seq)) continue
-        for (const el of seq) {
-          if (el && el.name && typeof el.name === 'string' && el.name.includes(registryPrefix)) {
-            const parts = el.name.split('/')
-            detectedImageName = parts.length ? parts[parts.length - 1] : el.name
-            if (el.version) detectedImageVersion = el.version
-            break
+  // If image_details wasn't present, try to detect image info from impactPaths
+  if (!detectedImageName) {
+    for (const entry of (parsed.vulnerabilities || [])) {
+      if (entry.impactPaths && Array.isArray(entry.impactPaths)) {
+        let found = false
+        for (const seq of entry.impactPaths) {
+          if (!Array.isArray(seq)) continue
+          for (const el of seq) {
+            if (el && el.name && typeof el.name === 'string') {
+              const parts = el.name.split('/')
+              detectedImageName = parts.length ? parts[parts.length - 1] : el.name
+              if (el.version) detectedImageVersion = el.version
+              found = true
+              break
+            }
           }
+          if (found) break
         }
-        if (detectedImageName) break
+        if (found) break
       }
     }
-    if (detectedImageName) break
   }
 
   const image = detectedImageName ? { name: detectedImageName, version: detectedImageVersion || null } : null

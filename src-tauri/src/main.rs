@@ -39,11 +39,24 @@ fn read_findings(path: String) -> Result<String, String> {
 fn transform_vulnerabilities(parsed: &serde_json::Value) -> Option<serde_json::Value> {
     let vuls = parsed.get("vulnerabilities")?.as_array()?;
 
-    // Try to detect image info from impactPaths entries matching our internal registry prefix.
-    // This will be used to populate the top-level `image` field returned to the frontend.
-    let registry_prefix = "git.grid";
+    // Prefer explicit image_details.repository / image_details.tag if provided by the JSON.
+    // Otherwise fall back to scanning impactPaths to detect image info.
     let mut detected_image_name: Option<String> = None;
     let mut detected_image_version: Option<String> = None;
+
+    if let Some(img) = parsed.get("image_details") {
+        if let Some(repo) = img.get("repository").and_then(|v| v.as_str()) {
+            let parts: Vec<&str> = repo.split('/').collect();
+            if let Some(last) = parts.last() {
+                detected_image_name = Some(last.to_string());
+            } else {
+                detected_image_name = Some(repo.to_string());
+            }
+        }
+        if let Some(tag) = img.get("tag").and_then(|v| v.as_str()) {
+            detected_image_version = Some(tag.to_string());
+        }
+    }
 
     let mut findings: Vec<serde_json::Value> = Vec::new();
     for (i, entry) in vuls.iter().enumerate() {
@@ -157,18 +170,18 @@ fn transform_vulnerabilities(parsed: &serde_json::Value) -> Option<serde_json::V
                     if let Some(seq) = path_seq.as_array() {
                         for el in seq.iter() {
                             if let Some(name) = el.get("name").and_then(|n| n.as_str()) {
-                                if name.contains(registry_prefix) {
-                                    // take last path segment after '/'
-                                    let parts: Vec<&str> = name.split('/').collect();
-                                    if let Some(last) = parts.last() {
-                                        detected_image_name = Some(last.to_string());
-                                    }
-                                    // version field on this element is our image version
-                                    if let Some(ver) = el.get("version").and_then(|v| v.as_str()) {
-                                        detected_image_version = Some(ver.to_string());
-                                    }
-                                    break 'outer;
+                                // fallback: take the last path segment of the name
+                                let parts: Vec<&str> = name.split('/').collect();
+                                if let Some(last) = parts.last() {
+                                    detected_image_name = Some(last.to_string());
+                                } else {
+                                    detected_image_name = Some(name.to_string());
                                 }
+                                // version field on this element is our image version
+                                if let Some(ver) = el.get("version").and_then(|v| v.as_str()) {
+                                    detected_image_version = Some(ver.to_string());
+                                }
+                                break 'outer;
                             }
                         }
                     }
