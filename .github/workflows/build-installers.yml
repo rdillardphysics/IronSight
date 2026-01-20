@@ -125,10 +125,10 @@ jobs:
         shell: powershell
         run: |
           # Ensure both MSVC and GNU targets are available (best-effort)
-          rustup target add x86_64-pc-windows-msvc || true
-          rustup target add x86_64-pc-windows-gnu || true
+          try { rustup target add x86_64-pc-windows-msvc } catch { Write-Host "rustup target add msvc failed; continuing" }
+          try { rustup target add x86_64-pc-windows-gnu } catch { Write-Host "rustup target add gnu failed; continuing" }
           # Install rust-src which some tools require
-          rustup component add rust-src || true
+          try { rustup component add rust-src } catch { Write-Host "rustup component add rust-src failed; continuing" }
           # Update MSYS2 packages and install mingw toolchain to provide gcc/ld for GNU builds.
           $msys = 'C:\\tools\\msys64\\usr\\bin\\bash.exe'
           if (Test-Path $msys) {
