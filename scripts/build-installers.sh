@@ -67,6 +67,9 @@ fi
 echo "Building frontend (vite)..."
 npm run build
 
+echo "Ensuring Tauri icons exist..."
+npm run tauri:prepare
+
 # Map logical target names to Rust target triples (used for cross builds).
 map_target_triple() {
 	case "$1" in

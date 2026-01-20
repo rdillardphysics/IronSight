@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "tauri:prepare": "node scripts/ensure-tauri-icons.mjs",
     "tauri:dev": "node scripts/tauri.mjs dev",
     "tauri:build": "node scripts/tauri.mjs build",
     "tauri:info": "node scripts/tauri.mjs info",
@@ -17,6 +18,7 @@
     "axe-core": "^4.11.1",
     "http-server": "^14.1.1",
     "pa11y": "^6.2.3",
+    "png-to-ico": "^3.0.1",
     "puppeteer": "^19.11.1",
     "vite": "^7.3.1"
   },
