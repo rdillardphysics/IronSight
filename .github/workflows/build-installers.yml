@@ -60,7 +60,40 @@ jobs:
           # Use the -dev package which is present across Ubuntu releases and
           # provides headers/libs needed by Tauri/GTK builds. Avoid pinning a
           # specific libwebkit2gtk version which may differ across distro releases.
-          sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-dev libayatana-appindicator3-1 build-essential pkg-config libssl-dev ca-certificates
+          sudo apt-get install -y libgtk-3-0 libayatana-appindicator3-1 build-essential pkg-config libssl-dev ca-certificates || true
+
+          # Diagnostics: print runner OS info and available libwebkit packages
+          echo "=== Runner OS info ==="
+          cat /etc/os-release || true
+          echo "=== Apt sources (first 50 lines) ==="
+          grep -R "^deb" /etc/apt/sources.list /etc/apt/sources.list.d | sed -n '1,50p' || true
+          echo "=== apt-cache search '^libwebkit2gtk' (first 50) ==="
+          apt-cache search '^libwebkit2gtk' | sed -n '1,50p' || true
+          echo "=== apt-cache policy for common candidates ==="
+          apt-cache policy libwebkit2gtk-4.1-dev || true
+          apt-cache policy libwebkit2gtk-4.0-dev || true
+
+          # Try a few possible libwebkit2gtk -dev package names (4.1 then 4.0).
+          # If neither exact name exists, fall back to searching apt-cache
+          # and install the first matching -dev package found.
+          WEBKIT_PKG=""
+          if apt-cache show libwebkit2gtk-4.1-dev >/dev/null 2>&1; then
+            WEBKIT_PKG=libwebkit2gtk-4.1-dev
+          elif apt-cache show libwebkit2gtk-4.0-dev >/dev/null 2>&1; then
+            WEBKIT_PKG=libwebkit2gtk-4.0-dev
+          else
+            WEBKIT_PKG=$(apt-cache search '^libwebkit2gtk' | awk '{print $1}' | grep -E 'libwebkit2gtk-.*dev' | head -n1 || true)
+          fi
+
+          echo "Selected WEBKIT_PKG='$WEBKIT_PKG'"
+          if [ -n "$WEBKIT_PKG" ]; then
+            echo "Installing webkit dev package: $WEBKIT_PKG"
+            sudo apt-get install -y "$WEBKIT_PKG"
+          else
+            echo "Warning: no libwebkit2gtk -dev package found via apt; build may fail if webkit dev libs are required"
+            echo "Listing full apt-cache search output to aid debugging:"
+            apt-cache search libwebkit2gtk || true
+          fi
 
       - name: (Windows) Install NSIS and tools
         if: matrix.os == 'windows-latest'
