@@ -1,0 +1,107 @@
+name: Build installers
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-installers:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache Cargo registry and target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: (Linux) Install native deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-37 libayatana-appindicator3-1 build-essential pkg-config libssl-dev
+
+      - name: (Windows) Install NSIS and tools
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          choco install -y nsis 7zip msys2
+          # Ensure chocolatey path is available
+          refreshenv || true
+
+      - name: (Windows) Add Rust targets and prepare MSYS2 toolchain
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          # Ensure both MSVC and GNU targets are available (best-effort)
+          rustup target add x86_64-pc-windows-msvc || true
+          rustup target add x86_64-pc-windows-gnu || true
+          # Install rust-src which some tools require
+          rustup component add rust-src || true
+          # Update MSYS2 packages and install mingw toolchain to provide gcc/ld for GNU builds.
+          $msys = 'C:\\tools\\msys64\\usr\\bin\\bash.exe'
+          if (Test-Path $msys) {
+            & $msys -lc 'pacman -Syu --noconfirm' ;
+            & $msys -lc 'pacman -S --noconfirm base-devel mingw-w64-x86_64-toolchain' ;
+          } else {
+            Write-Host "MSYS2 not found at $msys; skipping pacman steps"
+          }
+
+      - name: (macOS) Install pkg dependencies (if any)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # macOS runners usually have required tooling; add brew packages here if needed
+          brew update || true
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Run installer build script
+        # Use bash on unix runners; on Windows use bash available on the runner
+        shell: bash
+        run: ./scripts/build-installers.sh
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: |
+            src-tauri/target/release/bundle/**
+            target/release/bundle/**
