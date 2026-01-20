@@ -497,7 +497,7 @@
         "scaScanStatusCode": 0
     },
     "multiScanId": "some_miti_scan_id",
-    "totalVulnerabilities": {
+    "total_vulnerabilities": {
         "critical": 2,
         "high": 3,
         "medium": 2,

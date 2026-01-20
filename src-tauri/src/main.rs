@@ -222,7 +222,8 @@ fn transform_vulnerabilities(parsed: &serde_json::Value) -> Option<serde_json::V
             "version": detected_image_version.clone().map(|s| serde_json::Value::String(s)).unwrap_or(serde_json::Value::Null)
         }),
         "scan_date": serde_json::Value::Null,
-        "findings": findings
+        "findings": findings,
+        "total_vulnerabilities": parsed.get("total_vulnerabilities").cloned().unwrap_or(serde_json::Value::Null)
     });
 
     Some(out_obj)

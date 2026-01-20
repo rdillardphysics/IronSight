@@ -89,7 +89,7 @@ let sortState = { key: null, dir: 1 } // dir: 1 asc, -1 desc
 // filterState.showAll: true => bypass severity filtering (Show All ON)
 // filterState.severities: map of severity -> boolean indicating whether it's included
 // NOTE: severity checkboxes default to unchecked (bad UX to pre-select); they are only used when showAll === false
-let filterState = { showAll: true, severities: { critical: false, high: false, medium: false, low: false, info: false }, fixOnly: false, q: '', searchMode: 'literal' }
+let filterState = { showAll: true, severities: { critical: false, high: false, medium: false, low: false, info: false, unknown: false }, fixOnly: false, q: '', searchMode: 'literal' }
 
 // Virtualization state kept across renderFindings() calls so we can
 // preserve scroll position and avoid leaking event listeners.
@@ -108,7 +108,7 @@ function scheduleRender(payload) {
 }
 
 function compareByKey(a, b, key) {
-  const sevOrder = { critical: 5, high: 4, medium: 3, low: 2, info: 1 }
+  const sevOrder = { critical: 5, high: 4, medium: 3, low: 2, info: 1, unknown: 0 }
 
   if (key === 'severity') {
     const av = (a.severity || '').toLowerCase()
@@ -854,7 +854,7 @@ function renderFindings(data) {
 
   // Only treat this as a "loaded" dataset when there's at least one finding present.
   if (data && Array.isArray(data.findings) && data.findings.length > 0) {
-    lastLoadedData = { image: data.image || null, scan_date: data.scan_date || null }
+    lastLoadedData = { image: data.image || null, scan_date: data.scan_date || null, total_vulnerabilities: (data && data.total_vulnerabilities) ? data.total_vulnerabilities : null }
   }
 
   const filtered = filterFindings(currentFindings)
@@ -879,14 +879,16 @@ function renderFindings(data) {
     imageDisplay = imageSrc.name
     if (imageSrc.version) imageDisplay = `${imageDisplay}:${imageSrc.version}`
   }
-  // Prefer explicit totals if provided by the JSON; otherwise count filtered results
-  const totals = (data && data.totalVulnerabilities) ? data.totalVulnerabilities : null
-  const criticalCount = totals && Number.isFinite(Number(totals.critical)) ? Number(totals.critical) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'critical').length
-  const highCount = totals && Number.isFinite(Number(totals.high)) ? Number(totals.high) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'high').length
-  const mediumCount = totals && Number.isFinite(Number(totals.medium)) ? Number(totals.medium) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'medium').length
-  const lowCount = totals && Number.isFinite(Number(totals.low)) ? Number(totals.low) : filtered.filter(f => String((f.severity||'')).toLowerCase() === 'low').length
+  // Use the provided total_vulnerabilities counts directly (no counting fallback)
+  const totals = (data && data.total_vulnerabilities) ? data.total_vulnerabilities : {}
+  const criticalCount = Number(totals.critical || 0)
+  const highCount = Number(totals.high || 0)
+  const mediumCount = Number(totals.medium || 0)
+  const lowCount = Number(totals.low || 0)
+  const infoCount = Number(totals.info || 0)
+  const unknownCount = Number(totals.unknown || 0)
 
-  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay} — <strong>Vulnerabilities:</strong> <strong>Critical:</strong> ${criticalCount} <strong>High:</strong> ${highCount} <strong>Medium:</strong> ${mediumCount} <strong>Low:</strong> ${lowCount}`
+  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay} — <strong>Vulnerabilities:</strong> <strong>Critical:</strong> ${criticalCount} <strong>High:</strong> ${highCount} <strong>Medium:</strong> ${mediumCount} <strong>Low:</strong> ${lowCount} <strong>Info:</strong> ${infoCount} <strong>Unknown:</strong> ${unknownCount}`
   out.appendChild(meta)
 
   // Move the filters element into the output panel so it displays directly
@@ -1310,7 +1312,7 @@ function setupFilters() {
     if (!filterState.showAll) {
       // read selected severities into the filterState.severities map
       if (modalSeverityChecks && modalSeverityChecks.length) {
-        const map = { critical: false, high: false, medium: false, low: false, info: false }
+        const map = { critical: false, high: false, medium: false, low: false, info: false, unknown: false }
         modalSeverityChecks.forEach(chk => { map[String(chk.value).toLowerCase()] = !!chk.checked })
         // if none selected, require user to choose or re-enable Show All
         const any = Object.values(map).some(Boolean)
@@ -1398,7 +1400,7 @@ function setupFilters() {
       filterState._rules = { whitelist: whitelist.map(compileRuleLine), ignore: ignore.map(compileRuleLine) }
       try { localStorage.setItem('filter_rules', JSON.stringify({ whitelist, ignore })) } catch (e) { /* ignore */ }
     } catch (e) { console.debug('compile rules failed', e) }
-    scheduleRender({ image: lastLoadedData?.image || null, scan_date: lastLoadedData?.scan_date || null, findings: currentFindings })
+    scheduleRender({ image: lastLoadedData?.image || null, scan_date: lastLoadedData?.scan_date || null, total_vulnerabilities: lastLoadedData?.total_vulnerabilities || null, findings: currentFindings })
     hideFiltersModal()
   }
 
@@ -1550,7 +1552,7 @@ function setupFilters() {
   }
 
   if (clear) clear.addEventListener('click', () => {
-    filterState.severities = { critical: false, high: false, medium: false, low: false, info: false }
+    filterState.severities = { critical: false, high: false, medium: false, low: false, info: false, unknown: false }
     filterState.fixOnly = false
     filterState.showAll = true
     filterState.q = ''
@@ -1567,7 +1569,7 @@ function setupFilters() {
       loadReadmeIntoOutput()
       return
     }
-    scheduleRender({ image: lastLoadedData?.image || null, scan_date: lastLoadedData?.scan_date || null, findings: currentFindings })
+    scheduleRender({ image: lastLoadedData?.image || null, scan_date: lastLoadedData?.scan_date || null, total_vulnerabilities: lastLoadedData?.total_vulnerabilities || null, findings: currentFindings })
   })
 
   // Initialize persisted rules (compile into simple rule objects) so stored
@@ -2343,7 +2345,8 @@ function setupScanModeUi() {
         const [remoteHost, remotePortS] = (remoteHostPort || '127.0.0.1:8080').split(':')
         const remotePort = parseInt(remotePortS) || 8080
         try {
-          const res = await invoke('start_ssh_tunnel', { ip, username: user, local_port: Number(localPort), remote_host: remoteHost, remote_port: Number(remotePort) })
+          // Tauri command keys are camelCase in the JS binding (e.g. localPort)
+          const res = await invoke('start_ssh_tunnel', { ip, username: user, localPort: Number(localPort), remoteHost: remoteHost, remotePort: Number(remotePort) })
           if (res === 'running' || res === 'already_running') {
             showToast('SSH tunnel started', 'info')
             updateSshStateDisplay(res)
@@ -2353,7 +2356,10 @@ function setupScanModeUi() {
           }
         } catch (e) {
           console.debug('start_ssh_tunnel failed', e)
-          showToast('Failed to start SSH tunnel', 'error')
+           // Surface backend error details when available to aid debugging
+           let msg = 'Failed to start SSH tunnel'
+           try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
+           showToast(msg, 'error')
         }
       } else {
         try {
@@ -2367,7 +2373,9 @@ function setupScanModeUi() {
           }
         } catch (e) {
           console.debug('stop_ssh_tunnel failed', e)
-          showToast('Failed to stop SSH tunnel', 'error')
+           let msg = 'Failed to stop SSH tunnel'
+           try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
+           showToast(msg, 'error')
         }
       }
     })

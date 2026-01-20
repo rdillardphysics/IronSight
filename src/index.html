@@ -75,7 +75,7 @@
         <!-- Move scan UI inline into the controls row and align it to the right -->
         <!-- The `.scan-inline` container will be appended inside `.controls` by markup below. -->
 
-        <div id="filters" class="filters hidden">
+        <div id="filters" class="filters">
             <!-- Simplified: only action buttons remain. Controls (severity/search) removed per request. -->
             <button id="openFilters" class="btn btn-primary attached-text" title="Edit filters">
                 <img data-themed="true" data-icon="filter-edit" src="assets/icons/filter-edit-dark.svg" alt="Filters" />
@@ -176,6 +176,8 @@
                                     Low</label>
                                 <label class="inline"><input class="modalSeverityChk" type="checkbox" value="info" />
                                     Info</label>
+                                <label class="inline"><input class="modalSeverityChk" type="checkbox" value="unknown" />
+                                    Unknown</label>
                             </div>
                             <button id="modalResetShowAll" class="btn btn-ghost btn-icon" type="button"
                                 title="Reset Severity filter" aria-label="Reset Severity filter">
