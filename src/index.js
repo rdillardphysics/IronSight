@@ -281,6 +281,15 @@ function pushModal(modal, onClose) {
   try {
     window._modalStack = window._modalStack || []
     if (!window._modalStack.find(m => m.modal === modal)) window._modalStack.push({ modal, onClose })
+    // assign z-index values so the most-recently opened modal appears on top
+    try {
+      const base = 1000
+      window._modalStack.forEach((entry, idx) => {
+        try {
+          if (entry && entry.modal && entry.modal.style) entry.modal.style.zIndex = String(base + idx * 10)
+        } catch (e) { /* ignore per-entry failures */ }
+      })
+    } catch (e) { /* ignore */ }
   } catch (e) { /* ignore */ }
 }
 
@@ -289,6 +298,15 @@ function popModal(modal) {
     window._modalStack = window._modalStack || []
     const i = window._modalStack.findIndex(m => m.modal === modal)
     if (i !== -1) window._modalStack.splice(i, 1)
+    // recompute z-index values after removal so stacking order remains consistent
+    try {
+      const base = 1000
+      window._modalStack.forEach((entry, idx) => {
+        try {
+          if (entry && entry.modal && entry.modal.style) entry.modal.style.zIndex = String(base + idx * 10)
+        } catch (e) { /* ignore per-entry failures */ }
+      })
+    } catch (e) { /* ignore */ }
   } catch (e) { /* ignore */ }
 }
 
@@ -311,6 +329,24 @@ function closeTopModal() {
       try { popModal(modal) } catch (ee) { }
     }
   } catch (e) { console.debug('closeTopModal failed', e) }
+}
+
+function closeAllModals() {
+  try {
+    window._modalStack = window._modalStack || []
+    const arr = window._modalStack.slice()
+    arr.forEach(entry => {
+      try {
+        const { modal, onClose } = entry
+        if (typeof onClose === 'function') onClose()
+        else {
+          if (modal && modal.classList) modal.classList.add('hidden')
+          try { detachModalAccessibility(modal) } catch (e) { }
+        }
+      } catch (e) { /* ignore per-modal errors */ }
+    })
+    window._modalStack = []
+  } catch (e) { console.debug('closeAllModals failed', e) }
 }
 
 // Consolidated helper: attach both focus-trap and Escape-to-close for modals.
@@ -1649,6 +1685,11 @@ function setupAccessibility() {
   // Idempotent: if we've already attached the handler, do nothing.
   if (window._a11yHandler) return
   // Arrow keys navigate rows; '/', 'f', 'o', 'l', 'c', 's' shortcuts when focus isn't in an input
+  // chord state: press 'c' then another key within timeout to trigger chord actions
+  let _chordActive = false
+  let _chordTimer = null
+  const _chordTimeoutMs = 700
+
   const handler = (e) => {
     // Respect shortcuts toggle: default to enabled when key absent
     try {
@@ -1659,6 +1700,23 @@ function setupAccessibility() {
     const ae = document.activeElement
     const tag = ae && ae.tagName ? ae.tagName.toLowerCase() : ''
     const isEditing = tag === 'input' || tag === 'textarea' || tag === 'select'
+
+    // If we're in chord-mode, handle the second keypress
+    if (_chordActive) {
+      const second = e.key
+      _chordActive = false
+      if (_chordTimer) { clearTimeout(_chordTimer); _chordTimer = null }
+      if (!isEditing) {
+        // 'c' + 'a' => close all modals
+        if (second === 'a') {
+          e.preventDefault()
+          try { closeAllModals() } catch (err) { console.debug('closeAllModals failed', err) }
+          return
+        }
+      }
+      // if not matched, consume the keypress to avoid accidental actions
+      return
+    }
 
     // Arrow navigation for rows
     if (!isEditing && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
@@ -1671,6 +1729,14 @@ function setupAccessibility() {
     if (isEditing) return
 
     // simple single-key shortcuts
+    // start chord prefix 'c' (wait for next key)
+    if (e.key === 'c') {
+      e.preventDefault()
+      _chordActive = true
+      if (_chordTimer) clearTimeout(_chordTimer)
+      _chordTimer = setTimeout(() => { _chordActive = false; _chordTimer = null }, _chordTimeoutMs)
+      return
+    }
     if (e.key === '/') {
       // open filters and focus search box
       e.preventDefault()
