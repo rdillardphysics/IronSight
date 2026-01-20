@@ -15,11 +15,19 @@ if (!command) {
   process.exit(2);
 }
 
-// Prefer the locally installed Tauri CLI entrypoint to avoid PATH/npx resolution issues in CI.
-// On Windows, do NOT spawn the `.cmd` shim directly (can fail under bash with EINVAL);
-// instead run the JS shim via `node`.
-const tauriJsShim = path.resolve(rootDir, 'node_modules', '.bin', 'tauri');
-const tauriCmdShim = path.resolve(rootDir, 'node_modules', '.bin', 'tauri.cmd');
+// Prefer running the package's JS entrypoint directly via `node`.
+// This avoids npm-generated `.bin` shims which can be platform-specific (`.cmd` on Windows)
+// or shell scripts (POSIX shim) that will break when executed with node.
+const tauriPkgEntrypoint = path.resolve(
+  rootDir,
+  'node_modules',
+  '@tauri-apps',
+  'cli',
+  'tauri.js'
+);
+
+// Legacy fallback: the npm `.bin` shim can exist and be useful on unix.
+const tauriBinShim = path.resolve(rootDir, 'node_modules', '.bin', 'tauri');
 
 let execFile;
 
@@ -28,25 +36,14 @@ let args = supportsConfig
   ? [command, '--config', 'tauri.conf.json', ...restArgs]
   : [command, ...restArgs];
 
-// Fallback to npx if the local bin isn't present (e.g. deps not installed).
-if (process.platform === 'win32') {
-  if (fs.existsSync(tauriJsShim)) {
-    execFile = process.execPath;
-    args = [tauriJsShim, ...args];
-  } else if (fs.existsSync(tauriCmdShim)) {
-    // As a last resort, run the .cmd shim via cmd.exe.
-    execFile = process.env.ComSpec || 'cmd.exe';
-    const cmdLine = `"${tauriCmdShim}" ${args.map((a) => `"${a.replaceAll('"', '\\"')}"`).join(' ')}`;
-    args = ['/d', '/s', '/c', cmdLine];
-  } else {
-    execFile = 'npx';
-    args = supportsConfig
-      ? ['tauri', command, '--config', 'tauri.conf.json', ...restArgs]
-      : ['tauri', command, ...restArgs];
-  }
-} else if (fs.existsSync(tauriJsShim)) {
-  execFile = tauriJsShim;
+if (fs.existsSync(tauriPkgEntrypoint)) {
+  execFile = process.execPath;
+  args = [tauriPkgEntrypoint, ...args];
+} else if (process.platform !== 'win32' && fs.existsSync(tauriBinShim)) {
+  // On unix, the `.bin/tauri` shim is a node script so it's safe to execute.
+  execFile = tauriBinShim;
 } else {
+  // Fallback to npx if deps aren't installed or entrypoint isn't found.
   execFile = 'npx';
   args = supportsConfig
     ? ['tauri', command, '--config', 'tauri.conf.json', ...restArgs]
