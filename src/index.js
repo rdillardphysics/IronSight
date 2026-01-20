@@ -200,22 +200,25 @@ function detachModalFocusTrap(modal) {
 function makeBackgroundInert(modal) {
   if (!modal || !document || !document.body) return
   try {
+    // Prevent double-requesting from the same modal
+    if (modal._requestedInert) return
+    modal._requestedInert = true
+    window._inertCount = (window._inertCount || 0) + 1
+
+    // Only apply DOM-wide inerting when transitioning 0 -> 1
+    if (window._inertCount !== 1) return
+
     const children = Array.from(document.body.children || [])
-    modal._inertBackup = []
+    const globalBackup = []
     children.forEach((el) => {
       if (!el || el === modal || el.contains(modal)) return
       const backup = { el, hadInert: !!el.inert, ariaHidden: el.getAttribute && el.getAttribute('aria-hidden'), focusables: [] }
-      // prefer native inert when available
       try {
-        if ('inert' in HTMLElement.prototype) {
-          el.inert = true
-        } else {
-          el.setAttribute && el.setAttribute('aria-hidden', 'true')
-        }
+        if ('inert' in HTMLElement.prototype) el.inert = true
+        else el.setAttribute && el.setAttribute('aria-hidden', 'true')
       } catch (e) {
         try { el.setAttribute && el.setAttribute('aria-hidden', 'true') } catch (ee) { }
       }
-      // disable focusable descendants so keyboard navigation doesn't escape
       try {
         const focusableSel = 'a[href], area[href], input, select, textarea, button, iframe, [tabindex]'
         const items = Array.from(el.querySelectorAll(focusableSel))
@@ -225,24 +228,31 @@ function makeBackgroundInert(modal) {
           try { n.setAttribute && n.setAttribute('tabindex', '-1') } catch (e) { }
         })
       } catch (e) { }
-      modal._inertBackup.push(backup)
+      globalBackup.push(backup)
     })
+    window._inertGlobalBackup = globalBackup
   } catch (e) {
-    // don't block modal behavior on inert failures
     console.debug('makeBackgroundInert failed', e)
   }
 }
 
 function restoreBackgroundInert(modal) {
-  if (!modal || !modal._inertBackup) return
+  if (!modal) return
   try {
-    modal._inertBackup.forEach((b) => {
+    // Only act if this modal previously requested inert
+    if (!modal._requestedInert) return
+    modal._requestedInert = false
+    window._inertCount = Math.max(0, (window._inertCount || 0) - 1)
+
+    // Only restore when count drops to zero
+    if ((window._inertCount || 0) !== 0) return
+
+    const globalBackup = window._inertGlobalBackup || []
+    globalBackup.forEach((b) => {
       const el = b.el
       try {
-        if ('inert' in HTMLElement.prototype) {
-          // restore previous inert value (boolean)
-          el.inert = !!b.hadInert
-        } else {
+        if ('inert' in HTMLElement.prototype) el.inert = !!b.hadInert
+        else {
           if (b.ariaHidden == null) el.removeAttribute && el.removeAttribute('aria-hidden')
           else el.setAttribute && el.setAttribute('aria-hidden', b.ariaHidden)
         }
@@ -260,10 +270,47 @@ function restoreBackgroundInert(modal) {
         })
       } catch (e) { }
     })
+    window._inertGlobalBackup = null
   } catch (e) {
     console.debug('restoreBackgroundInert failed', e)
   }
-  modal._inertBackup = null
+}
+
+// Modal stack helpers: push/pop modals and close only the top modal on Escape
+function pushModal(modal, onClose) {
+  try {
+    window._modalStack = window._modalStack || []
+    if (!window._modalStack.find(m => m.modal === modal)) window._modalStack.push({ modal, onClose })
+  } catch (e) { /* ignore */ }
+}
+
+function popModal(modal) {
+  try {
+    window._modalStack = window._modalStack || []
+    const i = window._modalStack.findIndex(m => m.modal === modal)
+    if (i !== -1) window._modalStack.splice(i, 1)
+  } catch (e) { /* ignore */ }
+}
+
+function closeTopModal() {
+  try {
+    window._modalStack = window._modalStack || []
+    if (!window._modalStack.length) return
+    const entry = window._modalStack[window._modalStack.length - 1]
+    if (!entry) return
+    const { modal, onClose } = entry
+    // If an onClose function was provided, call it (it should hide + detach). Otherwise, hide and detach.
+    try {
+      if (typeof onClose === 'function') onClose()
+      else {
+        if (modal && modal.classList) modal.classList.add('hidden')
+        try { detachModalAccessibility(modal) } catch (e) { /* ignore */ }
+      }
+    } catch (e) {
+      // ensure modal is removed from stack even if onClose throws
+      try { popModal(modal) } catch (ee) { }
+    }
+  } catch (e) { console.debug('closeTopModal failed', e) }
 }
 
 // Consolidated helper: attach both focus-trap and Escape-to-close for modals.
@@ -282,8 +329,11 @@ function attachModalAccessibility(modal, onClose) {
   attachModalFocusTrap(modal)
   // make background inert so screen readers and focus are constrained
   try { makeBackgroundInert(modal) } catch (e) { /* ignore */ }
-  if (!modal._escHandler && typeof onClose === 'function') {
-    modal._escHandler = (ev) => { if (ev.key === 'Escape') onClose() }
+  // remember onClose and push onto stack so Escape closes top modal only
+  try { modal._onClose = (typeof onClose === 'function') ? onClose : null } catch (e) { modal._onClose = null }
+  try { pushModal(modal, modal._onClose) } catch (e) { /* ignore */ }
+  if (!modal._escHandler) {
+    modal._escHandler = (ev) => { if (ev.key === 'Escape') closeTopModal() }
     document.addEventListener('keydown', modal._escHandler)
   }
 }
@@ -310,6 +360,7 @@ function detachModalAccessibility(modal) {
     }
   } catch (e) { /* ignore focus restore failures */ }
   modal._previousActiveElement = null
+  try { popModal(modal) } catch (e) { /* ignore */ }
 }
 
 // Match a compiled rule object against a finding. Returns true if the
