@@ -1599,6 +1599,11 @@ function setupAccessibility() {
   if (window._a11yHandler) return
   // Arrow keys navigate rows; '/', 'f', 'o', 'l', 'c', 's' shortcuts when focus isn't in an input
   const handler = (e) => {
+    // Respect shortcuts toggle: default to enabled when key absent
+    try {
+      const s = localStorage.getItem('shortcuts_enabled')
+      if (s === 'false') return
+    } catch (ee) { }
     // ignore if user is typing in an input/textarea/select
     const ae = document.activeElement
     const tag = ae && ae.tagName ? ae.tagName.toLowerCase() : ''
@@ -1632,6 +1637,26 @@ function setupAccessibility() {
       if (open) open.click()
       return
     }
+    if (e.key === 'w') {
+      e.preventDefault()
+      const open = document.getElementById('openFilters')
+      if (open) open.click()
+      setTimeout(() => {
+        const mw = document.getElementById('modalWhitelist')
+        if (mw) mw.focus()
+      }, 120)
+      return
+    }
+    if (e.key === 'b') {
+      e.preventDefault()
+      const open = document.getElementById('openFilters')
+      if (open) open.click()
+      setTimeout(() => {
+        const mb = document.getElementById('modalBlacklist')
+        if (mb) mb.focus()
+      }, 120)
+      return
+    }
     if (e.key === 'o') {
       e.preventDefault()
       const open = document.getElementById('openBtn')
@@ -1644,6 +1669,12 @@ function setupAccessibility() {
       if (settings) settings.click()
       return
     }
+    if (e.key === 't') {
+      e.preventDefault()
+      const ssh = document.getElementById('startSshTunnelBtn')
+      if (ssh) ssh.click()
+      return
+    }
     if (e.key === 'j') {
       e.preventDefault()
       const start = document.getElementById('startScanBtn')
@@ -1654,12 +1685,6 @@ function setupAccessibility() {
       e.preventDefault()
       const load = document.getElementById('loadBtn')
       if (load && !load.disabled) load.click()
-      return
-    }
-    if (e.key === 'c') {
-      e.preventDefault()
-      const clr = document.getElementById('clearFilters')
-      if (clr) clr.click()
       return
     }
   }
@@ -1752,6 +1777,7 @@ function setupSettings() {
   const closeBtn = modal ? modal.querySelector('[data-close]') : null
   const overlay = modal ? modal.querySelector('[data-overlay]') : null
   const accessToggle = document.getElementById('accessibilityToggle')
+  const shortcutsToggle = document.getElementById('shortcutsToggle')
 
   // SSH settings elements
   const sshIpInput = document.getElementById('sshIp')
@@ -1767,6 +1793,10 @@ function setupSettings() {
     try {
       const enabled = localStorage.getItem('accessibility_enabled')
       if (accessToggle) accessToggle.checked = (enabled !== 'false')
+    } catch (e) { }
+    try {
+      const s = localStorage.getItem('shortcuts_enabled')
+      if (shortcutsToggle) shortcutsToggle.checked = (s === null ? true : (s !== 'false'))
     } catch (e) { }
     // populate SSH fields from localStorage
     try {
@@ -1814,6 +1844,13 @@ function setupSettings() {
         teardownAccessibility()
         showToast('Accessibility disabled', 'info')
       }
+    })
+  }
+
+  if (shortcutsToggle) {
+    shortcutsToggle.addEventListener('change', (e) => {
+      const on = !!e.target.checked
+      try { localStorage.setItem('shortcuts_enabled', on ? 'true' : 'false') } catch (err) { }
     })
   }
 
@@ -2236,35 +2273,35 @@ window.addEventListener('DOMContentLoaded', () => {
   }, interval)
 })
 
-  // Setup README button/modal
-  function setupReadmeButton() {
-    const btn = document.getElementById('readmeBtn')
-    if (!btn) return
-    btn.addEventListener('click', () => {
-      const md = typeof readmeText !== 'undefined' ? readmeText : ''
-      const html = `<div class="readme">${mdToHtml(md)}</div>`
-      try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
-      let modal = document.getElementById('readmeModal')
-      const closeExisting = () => {
-        try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { }
-        try { detachModalAccessibility(modal) } catch (e) { }
-      }
-      if (modal) {
-        const container = modal.querySelector('.detail-body') || modal
-        if (container) container.innerHTML = html
-        modal.classList.remove('hidden')
-        modal.setAttribute('aria-hidden', 'false')
-        try { const closeBtn = modal.querySelector('[data-close]'); if (closeBtn) closeBtn.focus() } catch (e) { }
-        try { attachModalAccessibility(modal, closeExisting) } catch (e) { }
-        return
-      }
-
-      try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
-      modal = document.createElement('div')
-      modal.id = 'readmeModal'
-      modal.className = 'detail-modal readme-modal'
+// Setup README button/modal
+function setupReadmeButton() {
+  const btn = document.getElementById('readmeBtn')
+  if (!btn) return
+  btn.addEventListener('click', () => {
+    const md = typeof readmeText !== 'undefined' ? readmeText : ''
+    const html = `<div class="readme">${mdToHtml(md)}</div>`
+    try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
+    let modal = document.getElementById('readmeModal')
+    const closeExisting = () => {
+      try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { }
+      try { detachModalAccessibility(modal) } catch (e) { }
+    }
+    if (modal) {
+      const container = modal.querySelector('.detail-body') || modal
+      if (container) container.innerHTML = html
+      modal.classList.remove('hidden')
       modal.setAttribute('aria-hidden', 'false')
-      modal.innerHTML = `
+      try { const closeBtn = modal.querySelector('[data-close]'); if (closeBtn) closeBtn.focus() } catch (e) { }
+      try { attachModalAccessibility(modal, closeExisting) } catch (e) { }
+      return
+    }
+
+    try { if (typeof sanitizeModalsOnOpen === 'function') sanitizeModalsOnOpen() } catch (e) { }
+    modal = document.createElement('div')
+    modal.id = 'readmeModal'
+    modal.className = 'detail-modal readme-modal'
+    modal.setAttribute('aria-hidden', 'false')
+    modal.innerHTML = `
         <div class="overlay" data-overlay tabindex="-1"></div>
         <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="readmeTitle">
           <header>
@@ -2277,14 +2314,14 @@ window.addEventListener('DOMContentLoaded', () => {
           </header>
           <div class="detail-body">${html}</div>
         </div>`
-      document.body.appendChild(modal)
-      try { applyTheme && applyTheme(getSavedTheme()) } catch (e) { }
-      const close = () => { try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { } ; try { detachModalAccessibility(modal) } catch (e) { } }
-      modal.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', close))
-      const overlay = modal.querySelector('[data-overlay]')
-      if (overlay) overlay.addEventListener('click', close)
-      try { attachModalAccessibility(modal, close) } catch (e) { }
-    })
-  }
+    document.body.appendChild(modal)
+    try { applyTheme && applyTheme(getSavedTheme()) } catch (e) { }
+    const close = () => { try { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true') } catch (e) { }; try { detachModalAccessibility(modal) } catch (e) { } }
+    modal.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', close))
+    const overlay = modal.querySelector('[data-overlay]')
+    if (overlay) overlay.addEventListener('click', close)
+    try { attachModalAccessibility(modal, close) } catch (e) { }
+  })
+}
 
-  window.addEventListener('DOMContentLoaded', () => { setupReadmeButton() })
+window.addEventListener('DOMContentLoaded', () => { setupReadmeButton() })
