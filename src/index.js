@@ -1657,10 +1657,22 @@ function setupAccessibility() {
       }, 120)
       return
     }
+    if (e.key === 'r') {
+      e.preventDefault()
+      const open = document.getElementById('readmeBtn')
+      if (open) open.click()
+      return
+    }
     if (e.key === 'o') {
       e.preventDefault()
       const open = document.getElementById('openBtn')
       if (open) open.click()
+      return
+    }
+    if (e.key === 'p') {
+      e.preventDefault()
+      const fp = document.getElementById('filePath')
+      if (fp) fp.focus()
       return
     }
     if (e.key === 's') {
