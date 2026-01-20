@@ -35,7 +35,7 @@
             "impactPaths": [
                 [
                     {
-                        "name": "git.grid:4567/usmc/tdol/core/container-images/tdol-datahub/tdol-datahub-actions",
+                        "name": "git.grid/container-images/datahub/datahub-actions",
                         "version": "8.0.2-101394"
                     },
                     {
@@ -80,7 +80,7 @@
             "references": [ "https://example.com/CVE-2025-0001" ],
             "impactPaths": [
                 [
-                    { "name": "git.grid:4567/usmc/tdol/core/container-images/tdol-datahub/tdol-datahub-images", "version": "9.1.0" },
+                    { "name": "git.grid/container-images/datahub/datahub-images", "version": "9.1.0" },
                     { "name": "openssl-1.1.1k.rpm", "version": "1.1.1k", "location": { "file": "openssl-1.1.1k.rpm" } }
                 ]
             ],
@@ -130,7 +130,7 @@
             "cves": [ { "id": "CVE-2022-2002", "cvssV3": "3.1", "cvssV3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N", "cwe": ["CWE-200"] } ],
             "issueId": "XRAY-100004",
             "references": [ "https://example.com/CVE-2022-2002" ],
-            "impactPaths": [ [ { "name": "git.grid:4567/usmc/tdol/core/tdol-frontend/tdol-frontend-actions", "version": "1.0.0" }, { "name": "httpclient-4.5.6.jar", "version": "4.5.6" } ] ],
+            "impactPaths": [ [ { "name": "git.grid/frontend/frontend-actions", "version": "1.0.0" }, { "name": "httpclient-4.5.6.jar", "version": "4.5.6" } ] ],
             "jfrogResearcInformation": { "severity": "" }
         },
         {
@@ -160,7 +160,7 @@
             "cves": [ { "id": "CVE-2024-2003", "cvssV3": "7.5", "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "cwe": ["CWE-400"] } ],
             "issueId": "XRAY-100006",
             "references": [ "https://example.com/CVE-2024-2003" ],
-            "impactPaths": [ [ { "name": "git.grid:4567/usmc/tdol/core/tdol-proxy/tdol-proxy-image", "version": "3.2.1" }, { "name": "nginx-1.18.0.rpm", "version": "1.18.0" } ] ],
+            "impactPaths": [ [ { "name": "git.grid/proxy/proxy-image", "version": "3.2.1" }, { "name": "nginx-1.18.0.rpm", "version": "1.18.0" } ] ],
             "jfrogResearcInformation": { "severity": "" }
         },
         {
@@ -205,7 +205,7 @@
             "cves": [ { "id": "CVE-2024-9998", "cvssV3": "8.8", "cvssV3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H", "cwe": ["CWE-264"] } ],
             "issueId": "XRAY-100009",
             "references": [ "https://example.com/CVE-2024-9998" ],
-            "impactPaths": [ [ { "name": "git.grid:4567/usmc/tdol/core/tdol-kernel/tdol-kernel-image", "version": "1.0.0" }, { "name": "kernel-5.10.0.rpm", "version": "5.10.0" } ] ],
+            "impactPaths": [ [ { "name": "git.grid/kernel/kernel-image", "version": "1.0.0" }, { "name": "kernel-5.10.0.rpm", "version": "5.10.0" } ] ],
             "jfrogResearcInformation": { "severity": "" }
         }
     ],

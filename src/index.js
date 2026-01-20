@@ -1124,7 +1124,7 @@ function transformVulnerabilitiesClient(parsed) {
   if (!parsed) return parsed
   if (parsed.findings) return parsed
   if (!parsed.vulnerabilities || !Array.isArray(parsed.vulnerabilities)) return parsed
-  const registryPrefix = 'git.grid:4567/usmc/tdol/core'
+  const registryPrefix = 'git.grid'
   let detectedImageName = null
   let detectedImageVersion = null
 

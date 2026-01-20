@@ -41,7 +41,7 @@ fn transform_vulnerabilities(parsed: &serde_json::Value) -> Option<serde_json::V
 
     // Try to detect image info from impactPaths entries matching our internal registry prefix.
     // This will be used to populate the top-level `image` field returned to the frontend.
-    let registry_prefix = "git.grid:4567/usmc/tdol/core";
+    let registry_prefix = "git.grid";
     let mut detected_image_name: Option<String> = None;
     let mut detected_image_version: Option<String> = None;
 
