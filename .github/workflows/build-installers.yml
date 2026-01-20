@@ -60,7 +60,14 @@ jobs:
           # Use the -dev package which is present across Ubuntu releases and
           # provides headers/libs needed by Tauri/GTK builds. Avoid pinning a
           # specific libwebkit2gtk version which may differ across distro releases.
-          sudo apt-get install -y libgtk-3-0 libayatana-appindicator3-1 build-essential pkg-config libssl-dev ca-certificates || true
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            ca-certificates \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libayatana-appindicator3-dev || true
 
           # Diagnostics: print runner OS info and available libwebkit packages
           echo "=== Runner OS info ==="
@@ -82,7 +89,7 @@ jobs:
           elif apt-cache show libwebkit2gtk-4.0-dev >/dev/null 2>&1; then
             WEBKIT_PKG=libwebkit2gtk-4.0-dev
           else
-            WEBKIT_PKG=$(apt-cache search '^libwebkit2gtk' | awk '{print $1}' | grep -E 'libwebkit2gtk-.*dev' | head -n1 || true)
+            WEBKIT_PKG=$(apt-cache search '^libwebkit2gtk' | awk '{print $1}' | grep -E '^libwebkit2gtk-[0-9.]+-dev$' | sort -V | tail -n1 || true)
           fi
 
           echo "Selected WEBKIT_PKG='$WEBKIT_PKG'"
