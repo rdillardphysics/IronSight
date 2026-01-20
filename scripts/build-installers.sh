@@ -83,10 +83,19 @@ run_tauri_build_for() {
 		echo "Skipping empty target" && return
 	fi
 	echo "\n=== Building installer for: $tgt ==="
+	local -a tauri_args
+	tauri_args=()
+	if [[ "${CI:-}" == "true" ]]; then
+		tauri_args+=("--verbose")
+	fi
 	if [[ "$tgt" == "$HOST_OS" ]]; then
 		# Host build (no explicit target triple)
 		echo "Running: npm run tauri:build"
-		npm run tauri:build
+		if [[ ${#tauri_args[@]} -gt 0 ]]; then
+			npm run tauri:build -- "${tauri_args[@]}"
+		else
+			npm run tauri:build
+		fi
 	else
 		# Attempt cross-build using Rust --target if a mapping exists
 		local triple
@@ -102,7 +111,7 @@ run_tauri_build_for() {
 			fi
 		fi
 		echo "Running cross build: npm run tauri:build -- --target ${triple}"
-		if ! npm run tauri:build -- --target "${triple}"; then
+		if ! npm run tauri:build -- --target "${triple}" "${tauri_args[@]}"; then
 			echo "Cross-build for ${tgt} failed. See output above for details." && return
 		fi
 	fi

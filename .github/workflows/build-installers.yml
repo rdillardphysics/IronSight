@@ -111,7 +111,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          choco install -y nsis 7zip msys2
+          choco install -y nsis 7zip msys2 wixtoolset
           # Best-effort refresh of PATH for the current session
           try {
             Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1" -ErrorAction Stop
@@ -153,6 +153,9 @@ jobs:
       - name: Run installer build script
         # Use bash on unix runners; on Windows use bash available on the runner
         shell: bash
+        env:
+          RUST_BACKTRACE: '1'
+          RUST_LOG: 'tauri=debug,tauri_cli=debug'
         run: bash ./scripts/build-installers.sh
 
       - name: Upload installer artifacts
