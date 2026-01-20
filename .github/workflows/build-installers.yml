@@ -52,8 +52,15 @@ jobs:
       - name: (Linux) Install native deps
         if: matrix.os == 'ubuntu-latest'
         run: |
+          # Ensure universe repo is enabled (some webkit packages live there)
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-37 libayatana-appindicator3-1 build-essential pkg-config libssl-dev
+          sudo apt-get install -y software-properties-common || true
+          sudo add-apt-repository universe || true
+          sudo apt-get update
+          # Use the -dev package which is present across Ubuntu releases and
+          # provides headers/libs needed by Tauri/GTK builds. Avoid pinning a
+          # specific libwebkit2gtk version which may differ across distro releases.
+          sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-dev libayatana-appindicator3-1 build-essential pkg-config libssl-dev ca-certificates
 
       - name: (Windows) Install NSIS and tools
         if: matrix.os == 'windows-latest'
