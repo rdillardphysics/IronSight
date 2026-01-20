@@ -1,0 +1,43 @@
+IronSight — Proprietary Source-Available License
+
+Copyright (c) 2026 Rusty Dean Dillard
+All rights reserved.
+
+1. Definitions
+"Software" means the IronSight application source code, binaries, build scripts, documentation, and other materials included in this repository.
+"You" means the individual or legal entity exercising permissions under this license.
+
+2. Ownership
+The Software is licensed, not sold. The licensor retains all right, title, and interest in and to the Software.
+
+3. Limited Permission (Source-Available)
+Subject to your compliance with this license, you are granted a limited, non-exclusive, non-transferable, revocable permission to:
+(a) view and use the Software for your own internal purposes;
+(b) modify the Software for your own internal purposes.
+
+4. Restrictions
+Unless you have received prior written permission from the licensor, you may not:
+(a) redistribute, sublicense, or otherwise provide the Software (or any modified version) to any third party, whether in source or binary form;
+(b) publish the Software (or any modified version) as a public repository, package, or downloadable artifact;
+(c) use the Software for commercial purposes, including providing it to others as a hosted service or as part of a paid product;
+(d) remove or alter any copyright, trademark, or proprietary notices;
+(e) circumvent any technical limitations or security measures in the Software.
+
+5. Contributions
+Any contribution you submit (e.g., pull request, patch, suggestion) may be used by the licensor without obligation to you. By submitting a contribution, you represent that you have the right to do so.
+
+6. No Warranty
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+7. Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT WILL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, OR GOODWILL, ARISING OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THIS LICENSE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+8. Termination
+This license is effective until terminated. It terminates automatically if you breach any of its terms. Upon termination, you must cease all use of the Software and destroy all copies in your possession or control.
+
+9. Third-Party Software
+The Software may include or depend on third-party components licensed under their own terms. Those third-party license terms apply to the third-party components and do not grant you any rights to the Software beyond this license.
+
+10. Miscellaneous
+If any provision of this license is held unenforceable, the remaining provisions remain in effect.
+This license is governed by the laws applicable in the licensor's jurisdiction, excluding conflict of laws principles.
