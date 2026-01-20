@@ -7,6 +7,7 @@
     "build": "vite build",
     "tauri:dev": "node scripts/tauri.mjs dev",
     "tauri:build": "node scripts/tauri.mjs build",
+    "tauri:info": "node scripts/tauri.mjs info",
     "a11y:pa11y": "pa11y http://localhost:5173 --reporter html",
     "a11y:pa11y-json": "pa11y http://localhost:5173 --reporter json",
     "a11y:axe": "node scripts/run-axe.js"

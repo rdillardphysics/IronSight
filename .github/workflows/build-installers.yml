@@ -150,6 +150,25 @@ jobs:
       - name: Build web assets
         run: npm run build
 
+      - name: (Windows) Diagnostics (bash env)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== bash env diagnostics ==="
+          echo "PWD=$PWD"
+          echo "PATH=$PATH"
+          command -v node || true
+          node -v || true
+          command -v npm || true
+          npm -v || true
+          command -v npx || true
+          npx -v || true
+          echo "=== node_modules/.bin (first 80 entries) ==="
+          ls -la node_modules/.bin | sed -n '1,80p' || true
+          echo "=== tauri info (best-effort) ==="
+          npm run tauri:info -- --verbose || true
+
       - name: Run installer build script
         # Use bash on unix runners; on Windows use bash available on the runner
         shell: bash
