@@ -48,6 +48,7 @@ Back to [Contents](#contents)
 - `c` + `f` → Clear the filters
 - `c` + `v` → Clear the vulnerabilities table
 - `f` → Open the Edit Filters pop up
+- `m` → Change between light and dark mode
 - `o` → Open the file picker
 - `p` → Focus on the path textbox
 - `s` → Open the Settings

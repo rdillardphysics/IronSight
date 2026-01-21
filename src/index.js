@@ -858,6 +858,8 @@ function renderFindings(data) {
   }
 
   const filtered = filterFindings(currentFindings)
+  // reset navigation index whenever we re-render the findings list
+  try { if (virtualState) virtualState.navIndex = null } catch (e) { }
 
   // If we have never loaded any findings (no lastLoadedData), keep the output hidden
   // If we have never loaded any findings (no lastLoadedData), show the README help instead
@@ -1706,7 +1708,6 @@ window.addEventListener('DOMContentLoaded', () => {
 function setupAccessibility() {
   // Idempotent: if we've already attached the handler, do nothing.
   if (window._a11yHandler) return
-  // Arrow keys navigate rows; '/', 'f', 'o', 'l', 'c', 's' shortcuts when focus isn't in an input
   // chord state: press 'c' then another key within timeout to trigger chord actions
   let _chordActive = false
   let _chordTimer = null
@@ -1738,15 +1739,15 @@ function setupAccessibility() {
         // 'c' + 'f' => reset filters
         else if (second === 'f') {
           e.preventDefault()
-          const clear = document.getElementById('clearFilters')
-          if (clear) clear.click()
+          const clearFilters = document.getElementById('clearFilters')
+          if (clearFilters) clearFilters.click()
           return
         }
         // 'c' + 'v' => unload findings json
         else if (second === 'v') {
           e.preventDefault()
-          const unload = document.getElementById('clearLoaded')
-          if (unload) unload.click()
+          const clearLoaded = document.getElementById('clearLoaded')
+          if (clearLoaded) clearLoaded.click()
           return
         }
       }
@@ -1758,7 +1759,83 @@ function setupAccessibility() {
     if (!isEditing && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
       e.preventDefault()
       const dir = e.key === 'ArrowDown' ? 1 : -1
-      focusRowByDelta(dir)
+      try {
+        // compute current filtered & sorted rows
+        const filtered = filterFindings(currentFindings || [])
+        const rows = sortFindings(filtered || [])
+        if (!rows || rows.length === 0) return
+
+        const wrap = virtualState && virtualState.wrap
+        const rowHeight = virtualState && virtualState.rowHeight
+
+        // initialize nav index to top on first navigation
+        if (typeof virtualState.navIndex !== 'number' || virtualState.navIndex === null) {
+          virtualState.navIndex = 0
+        }
+
+        // move index
+        let ni = virtualState.navIndex + dir
+        if (ni < 0) ni = 0
+        if (ni >= rows.length) ni = rows.length - 1
+        virtualState.navIndex = ni
+
+        // remove previous marker
+        try { const prev = document.querySelector('.findings tbody tr.focused-row'); if (prev) { prev.classList.remove('focused-row'); prev.removeAttribute('aria-selected') } } catch (e) {}
+
+        // scroll to make index visible (virtualized list)
+        if (wrap && rowHeight) {
+          const maxTop = Math.max(0, rows.length * rowHeight - (wrap.clientHeight || 300))
+          wrap.scrollTop = Math.min(maxTop, Math.max(0, ni * rowHeight))
+        }
+
+        // after a short delay (allow virtualized render to complete), mark and focus the row
+        setTimeout(() => {
+          try {
+            const w = virtualState && virtualState.wrap
+            const tr = (w && w.querySelector) ? w.querySelector(`.findings tbody tr[data-index='${ni}']`) : document.querySelector(`.findings tbody tr[data-index='${ni}']`)
+            if (tr) {
+              // ensure the row has a keyboard-focusable tabindex
+              try { tr.tabIndex = 0 } catch (e) {}
+              tr.classList.add('focused-row')
+              tr.setAttribute('aria-selected', 'true')
+              try { tr.focus() } catch (e) { }
+            }
+          } catch (e) { console.debug('navigation focus failed', e) }
+        }, 50)
+      } catch (e) { console.debug('row navigation failed', e) }
+      return
+    }
+
+    // Open detail for focused row when Enter/Space pressed
+    if (!isEditing && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      try {
+        // prefer element marked by our focused-row class
+        let tr = document.querySelector('.findings tbody tr.focused-row')
+        if (!tr) {
+          // fallback: walk up from activeElement
+          let a = document.activeElement
+          while (a && a !== document.body) {
+            if (a.dataset && typeof a.dataset.index !== 'undefined' && a.dataset.index !== '') { tr = a; break }
+            a = a.parentElement
+          }
+        }
+        if (tr && tr.dataset && typeof tr.dataset.index !== 'undefined' && tr.dataset.index !== '') {
+          const idx = Number(tr.dataset.index)
+          if (!Number.isNaN(idx)) {
+            try {
+              const filtered = filterFindings(currentFindings || [])
+              const rows = sortFindings(filtered || [])
+              if (rows && rows[idx]) {
+                showFindingDetail(rows[idx])
+              } else if (typeof currentFindings !== 'undefined' && Array.isArray(currentFindings) && currentFindings[idx]) {
+                // fallback: older behavior
+                showFindingDetail(currentFindings[idx])
+              }
+            } catch (err) { console.debug('showFindingDetail failed', err) }
+          }
+        }
+      } catch (err) { console.debug('enter key handler failed', err) }
       return
     }
 
@@ -1840,40 +1917,17 @@ function setupAccessibility() {
       if (ssh) ssh.click()
       return
     }
-    if (e.key === 'l') {
+    if (e.key === 'm') {
       e.preventDefault()
-      const load = document.getElementById('loadBtn')
-      if (load && !load.disabled) load.click()
+      const theme = document.getElementById('themeSwitch')
+      if (theme && !theme.disabled) theme.click()
       return
     }
   }
   window._a11yHandler = handler
   document.addEventListener('keydown', window._a11yHandler)
 
-  // helpers
-  function focusRowByDelta(delta) {
-    try {
-      const wrap = virtualState && virtualState.wrap
-      const rowHeight = virtualState && virtualState.rowHeight
-      if (!wrap || !rowHeight) return
-      // find currently focused row index
-      const active = document.activeElement
-      let curIndex = -1
-      if (active && active.dataset && active.dataset.index) curIndex = Number(active.dataset.index)
-      // compute target index
-      let target = curIndex + delta
-      if (target < 0) target = 0
-      const total = Math.max(0, Math.floor((wrap.querySelector('div')?.style?.height ? parseInt(wrap.querySelector('div').style.height) : 0) / rowHeight))
-      if (total && target >= total) target = total - 1
-      // scroll to target index so it gets rendered
-      wrap.scrollTop = Math.max(0, target * rowHeight)
-      // after next frame, focus the rendered row if present
-      requestAnimationFrame(() => {
-        const tr = document.querySelector(`.findings tbody tr[data-index='${target}']`)
-        if (tr) tr.focus()
-      })
-    } catch (e) { console.debug('focusRowByDelta failed', e) }
-  }
+  // Keyboard row navigation handler removed — will implement a new navigation system.
 }
 
 function teardownAccessibility() {
