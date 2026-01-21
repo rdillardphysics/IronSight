@@ -48,7 +48,6 @@ Back to [Contents](#contents)
 - `c` + `f` → Clear the filters
 - `c` + `v` → Clear the vulnerabilities table
 - `f` → Open the Edit Filters pop up
-- `j` → Open the JFrog Xray scan tool
 - `o` → Open the file picker
 - `p` → Focus on the path textbox
 - `s` → Open the Settings

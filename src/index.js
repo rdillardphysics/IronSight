@@ -1840,12 +1840,6 @@ function setupAccessibility() {
       if (ssh) ssh.click()
       return
     }
-    if (e.key === 'j') {
-      e.preventDefault()
-      const start = document.getElementById('startScanBtn')
-      if (start) start.click()
-      return
-    }
     if (e.key === 'l') {
       e.preventDefault()
       const load = document.getElementById('loadBtn')
