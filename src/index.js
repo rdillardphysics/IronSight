@@ -1735,6 +1735,20 @@ function setupAccessibility() {
           try { closeAllModals() } catch (err) { console.debug('closeAllModals failed', err) }
           return
         }
+        // 'c' + 'f' => reset filters
+        else if (second === 'f') {
+          e.preventDefault()
+          const clear = document.getElementById('clearFilters')
+          if (clear) clear.click()
+          return
+        }
+        // 'c' + 'v' => unload findings json
+        else if (second === 'v') {
+          e.preventDefault()
+          const unload = document.getElementById('clearLoaded')
+          if (unload) unload.click()
+          return
+        }
       }
       // if not matched, consume the keypress to avoid accidental actions
       return
