@@ -1975,14 +1975,8 @@ function setupSettings() {
       if (sshUserInput) sshUserInput.value = user
       if (sshPasswordInput) sshPasswordInput.value = ''
       if (sshStoredStatus) sshStoredStatus.textContent = 'unknown'
-      // check whether a password exists (do not fetch the secret)
-      if (ip && user && typeof invoke === 'function') {
-        try {
-          invoke('has_ssh_credential', { ip, username: user }).then((res) => {
-            if (sshStoredStatus) sshStoredStatus.textContent = res ? 'stored' : 'none'
-          }).catch((e) => { if (sshStoredStatus) sshStoredStatus.textContent = 'unknown' })
-        } catch (e) { if (sshStoredStatus) sshStoredStatus.textContent = 'unknown' }
-      }
+      // Do not query the OS keyring when opening settings to avoid prompting the user.
+      if (sshStoredStatus) sshStoredStatus.textContent = 'unknown'
     } catch (e) { }
     modal.classList.remove('hidden')
     modal.setAttribute('aria-hidden', 'false')

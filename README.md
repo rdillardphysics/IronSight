@@ -297,6 +297,18 @@ Back to [Contents](#contents)
                 "severity": ""
             }
         }
+    },
+    "total_vulnerabilities": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0,
+        "unknown": 0
+    },
+    "image_details": {
+        "repository": "",
+        "tag": ""
     }
 }
 ```

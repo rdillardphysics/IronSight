@@ -15,6 +15,57 @@ use tauri::Emitter;
 use tauri::Manager;
 use tauri::Window;
 
+// Helper: allow disabling keyring access via env var `IRONSIGHT_DISABLE_KEYRING=1`.
+fn keyring_enabled() -> bool {
+    match std::env::var("IRONSIGHT_DISABLE_KEYRING") {
+        Ok(v) => {
+            let lv = v.to_lowercase();
+            !(lv == "1" || lv == "true" || lv == "yes")
+        }
+        Err(_) => true,
+    }
+}
+
+// Generate candidate paths where helper scripts may live.
+fn helper_script_candidates(script_name: &str) -> Vec<String> {
+    use std::path::PathBuf;
+    let mut candidates: Vec<String> = Vec::new();
+
+    candidates.push(PathBuf::from("./scripts").join(script_name).to_string_lossy().to_string());
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    candidates.push(manifest.join("scripts").join(script_name).to_string_lossy().to_string());
+    if let Some(parent) = manifest.parent() {
+        candidates.push(parent.join("scripts").join(script_name).to_string_lossy().to_string());
+    }
+
+    if let Ok(mut dir) = std::env::current_dir() {
+        for _ in 0..6 {
+            candidates.push(dir.join("scripts").join(script_name).to_string_lossy().to_string());
+            if !dir.pop() { break }
+        }
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(mut parent) = exe.parent().map(|p| p.to_path_buf()) {
+            for _ in 0..6 {
+                candidates.push(parent.join("scripts").join(script_name).to_string_lossy().to_string());
+                if !parent.pop() { break }
+            }
+        }
+    }
+
+    candidates
+}
+
+fn find_helper_script(script_name: &str) -> Option<String> {
+    for p in helper_script_candidates(script_name).iter() {
+        if std::path::Path::new(p).exists() {
+            return Some(p.clone());
+        }
+    }
+    None
+}
+
 #[tauri::command]
 fn read_findings(path: String) -> Result<String, String> {
     let mut contents = String::new();
@@ -33,6 +84,139 @@ fn read_findings(path: String) -> Result<String, String> {
 
     // otherwise return original content
     Ok(contents)
+}
+
+// Stream a local script to a remote host over SSH and execute it with a single
+// argument. The script is read from the repo `scripts/` (via `find_helper_script`).
+// If a stored keyring password exists and `sshpass` is available, it will be used
+// to provide the password non-interactively.
+#[tauri::command]
+fn run_local_script_on_remote(
+    window: Window,
+    script_name: String,
+    ip: String,
+    username: String,
+    arg: String,
+) -> Result<(), String> {
+    use std::io::{BufRead, BufReader, Write};
+
+    // locate the script in repo
+    let script_path = match find_helper_script(&script_name) {
+        Some(p) => p,
+        None => return Err(format!("script not found; checked: {}", helper_script_candidates(&script_name).join(", "))),
+    };
+
+    // read script contents
+    let script_bytes = match std::fs::read(&script_path) {
+        Ok(b) => b,
+        Err(e) => return Err(format!("failed to read script {}: {}", script_path, e)),
+    };
+
+    let target = format!("{}@{}", username, ip);
+
+    // Determine whether to prefix with sshpass. Only consult the OS keyring when enabled.
+    let mut use_sshpass = false;
+    let user_key = format!("{}@{}", username, ip);
+    if keyring_enabled() {
+        if let Ok(_pwd) = Entry::new("ironsight-ssh", &user_key).get_password() {
+            // check for sshpass availability
+            if std::process::Command::new("sh")
+                .arg("-c")
+                .arg("command -v sshpass >/dev/null 2>&1")
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+            {
+                use_sshpass = true;
+            }
+        }
+    }
+
+    // Prepare command builder
+    let script_bytes_clone = script_bytes.clone();
+    thread::spawn(move || {
+        let mut cmd = if use_sshpass {
+            let pwd = if keyring_enabled() {
+                Entry::new("ironsight-ssh", &user_key).get_password().unwrap_or_default()
+            } else {
+                String::new()
+            };
+            let mut c = std::process::Command::new("sshpass");
+            c.arg("-p")
+                .arg(pwd)
+                .arg("ssh")
+                .arg(format!("{}", target))
+                .arg("sh")
+                .arg("-s")
+                .arg("--")
+                .arg(&arg);
+            c
+        } else {
+            let mut c = std::process::Command::new("ssh");
+            c.arg(format!("{}", target))
+                .arg("sh")
+                .arg("-s")
+                .arg("--")
+                .arg(&arg);
+            c
+        };
+
+        cmd.stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+
+        match cmd.spawn() {
+            Ok(mut child) => {
+                // write script to remote stdin
+                if let Some(mut stdin) = child.stdin.take() {
+                    let _ = stdin.write_all(&script_bytes_clone);
+                }
+
+                // stream stdout
+                if let Some(out) = child.stdout.take() {
+                    let reader = BufReader::new(out);
+                    for line in reader.lines().flatten() {
+                        let _ = window.emit("run-script-progress", Some(serde_json::json!({"stream":"stdout","line": line})));
+                    }
+                }
+
+                // stream stderr in a separate thread
+                if let Some(err) = child.stderr.take() {
+                    let w = window.clone();
+                    thread::spawn(move || {
+                        let rdr = BufReader::new(err);
+                        for line in rdr.lines().flatten() {
+                            let _ = w.emit("run-script-progress", Some(serde_json::json!({"stream":"stderr","line": line})));
+                        }
+                    });
+                }
+
+                // wait for exit
+                match child.wait() {
+                    Ok(status) => {
+                        let _ = window.emit(
+                            "run-script-complete",
+                            Some(serde_json::json!({"status": format!("{:?}", status), "code": status.code()})),
+                        );
+                    }
+                    Err(e) => {
+                        let _ = window.emit(
+                            "run-script-complete",
+                            Some(serde_json::json!({"status": "error", "error": format!("wait failed: {}", e)})),
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                let _ = window.emit(
+                    "run-script-complete",
+                    Some(serde_json::json!({"status": "spawn_error", "error": format!("spawn failed: {}", e)})),
+                );
+            }
+        }
+    });
+
+    Ok(())
 }
 
 // Extracted transformer so it can be tested separately.
@@ -508,6 +692,10 @@ fn stop_ssh_tunnel(ip: String, username: String) -> Result<String, String> {
 #[tauri::command]
 fn store_ssh_credential(ip: String, username: String, password: String) -> Result<(), String> {
     let user_key = format!("{}@{}", username, ip);
+    if !keyring_enabled() {
+        // Keyring disabled by env; no-op and succeed to avoid prompting the user.
+        return Ok(());
+    }
     let entry = Entry::new("ironsight-ssh", &user_key);
     entry
         .set_password(&password)
@@ -519,6 +707,9 @@ fn store_ssh_credential(ip: String, username: String, password: String) -> Resul
 #[tauri::command]
 fn has_ssh_credential(ip: String, username: String) -> Result<bool, String> {
     let user_key = format!("{}@{}", username, ip);
+    if !keyring_enabled() {
+        return Ok(false);
+    }
     let entry = Entry::new("ironsight-ssh", &user_key);
     match entry.get_password() {
         Ok(_) => Ok(true),
@@ -531,6 +722,9 @@ fn has_ssh_credential(ip: String, username: String) -> Result<bool, String> {
 #[tauri::command]
 fn delete_ssh_credential(ip: String, username: String) -> Result<(), String> {
     let user_key = format!("{}@{}", username, ip);
+    if !keyring_enabled() {
+        return Ok(());
+    }
     let entry = Entry::new("ironsight-ssh", &user_key);
     entry.delete_password().map_err(|e| match e {
         KeyringError::NoEntry => format!("no entry"),
@@ -654,7 +848,8 @@ fn main() {
             has_ssh_credential,
             delete_ssh_credential,
             start_ssh_tunnel,
-            stop_ssh_tunnel
+            stop_ssh_tunnel,
+            run_local_script_on_remote,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
