@@ -62,12 +62,16 @@ $criticalCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "Crit
 $highCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "High" })
 $mediumCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "Medium" })
 $lowCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "Low" })
+$infoCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "Info" })
+$unknownCount = Count-Unique-Cves ($vuls | Where-Object { $_.severity -eq "Unknown" })
 
 $json | Add-Member -NotePropertyName "total_vulnerabilities" -NotePropertyValue @{
     critical = [int]$criticalCount
     high = [int]$highCount
     medium = [int]$mediumCount
     low = [int]$lowCount
+    info = [int]$infoCount
+    unknown = [int]$unknownCount
 } -Force
 
 $json | Add-Member -NotePropertyName "image_details" -NotePropertyValue @{
@@ -84,3 +88,5 @@ Write-Host "Critical: $criticalCount"
 Write-Host "High: $highCount"
 Write-Host "Medium: $mediumCount"
 Write-Host "Low: $lowCount"
+Write-Host "Info: $infoCount"
+Write-Host "Unknown: $unknownCount"

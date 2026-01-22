@@ -123,8 +123,14 @@ function compareByKey(a, b, key) {
   }
 
   if (key === 'cves') {
-    const ac = (a.cves || []).length
-    const bc = (b.cves || []).length
+    const countCves = (val) => {
+      if (Array.isArray(val)) return val.length
+      if (typeof val === 'string') return val.split(/[\s,]+/).filter(Boolean).length
+      if (typeof val === 'number' && Number.isFinite(val)) return val
+      return 0
+    }
+    const ac = countCves(a.cves != null ? a.cves : a.cve)
+    const bc = countCves(b.cves != null ? b.cves : b.cve)
     return ac - bc
   }
 
@@ -882,7 +888,11 @@ function renderFindings(data) {
     if (imageSrc.version) imageDisplay = `${imageDisplay}:${imageSrc.version}`
   }
   // Use the provided total_vulnerabilities counts directly (no counting fallback)
-  const totals = (data && data.total_vulnerabilities) ? data.total_vulnerabilities : {}
+  // If the current render payload lacks totals (e.g., after sorting/filtering),
+  // fall back to the last loaded dataset totals.
+  const totals = (data && data.total_vulnerabilities)
+    ? data.total_vulnerabilities
+    : ((lastLoadedData && lastLoadedData.total_vulnerabilities) ? lastLoadedData.total_vulnerabilities : {})
   const criticalCount = Number(totals.critical || 0)
   const highCount = Number(totals.high || 0)
   const mediumCount = Number(totals.medium || 0)
@@ -1125,7 +1135,14 @@ function renderFindings(data) {
     th.onclick = () => {
       if (sortState.key === key) sortState.dir = -sortState.dir
       else { sortState.key = key; sortState.dir = 1 }
-      scheduleRender({ image: data.image, scan_date: data.scan_date, findings: currentFindings })
+      scheduleRender({
+        image: (data && data.image) ? data.image : (lastLoadedData ? lastLoadedData.image : null),
+        scan_date: (data && data.scan_date) ? data.scan_date : (lastLoadedData ? lastLoadedData.scan_date : null),
+        total_vulnerabilities: (data && data.total_vulnerabilities)
+          ? data.total_vulnerabilities
+          : (lastLoadedData ? lastLoadedData.total_vulnerabilities : null),
+        findings: currentFindings
+      })
     }
   })
 }

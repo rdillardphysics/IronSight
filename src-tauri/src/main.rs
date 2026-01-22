@@ -524,6 +524,11 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
             let mut cmd = {
                 let mut c = Command::new("sh");
                 c.arg("-c").arg(t);
+                // Ensure common Homebrew/system paths are available for jf/jq/docker
+                let base_path = std::env::var("PATH").unwrap_or_default();
+                let extra_path = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+                let merged = format!("{}:{}", extra_path, base_path);
+                c.env("PATH", merged);
                 c
             };
 
@@ -604,6 +609,11 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
         let mut cmd = {
             let mut c = Command::new("sh");
             c.arg(&script_path).arg(&image);
+            // Ensure common Homebrew/system paths are available for jf/jq/docker
+            let base_path = std::env::var("PATH").unwrap_or_default();
+            let extra_path = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+            let merged = format!("{}:{}", extra_path, base_path);
+            c.env("PATH", merged);
             c
         };
 
@@ -640,6 +650,10 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
 
                 match std::fs::read_to_string(&output_path) {
                     Ok(content) => {
+                        #[cfg(target_os = "windows")]
+                        {
+                            let _ = open::that(&output_path);
+                        }
                         let _ = window.emit(
                             "scan-complete",
                             Some(serde_json::json!({
