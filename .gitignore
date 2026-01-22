@@ -51,4 +51,4 @@ coverage/
 ## Logs
 *.log
 
-**/detailed_report.json
+src-tauri/detailed_report.json
