@@ -50,3 +50,5 @@ coverage/
 
 ## Logs
 *.log
+
+**/detailed_report.json
