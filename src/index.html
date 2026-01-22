@@ -59,8 +59,7 @@
                     <img data-themed="true" data-icon="clean" src="assets/icons/clean-dark.svg" alt="Clear" />
                 </button>
             </div>
-            <input id="filePicker" type="file" accept="application/json" style="display:none" aria-hidden="true"
-                tabindex="-1" />
+            <input id="filePicker" type="file" accept="application/json" class="sr-only" />
 
             <!-- Inline scan UI: aligned to the right of the controls row -->
             <!-- JFrog startScanBtn removed (temporarily)
@@ -279,17 +278,6 @@
                             <div style="font-size:13px; color:var(--muted)">Enable keyboard navigation, focus traps, and
                                 modal inerting.</div>
                         </div>
-                    </div>
-                    <div class="section meta-row" style="margin-top:10px">
-                        <label style="font-weight:600">Keyboard Shortcuts</label>
-                        <div style="margin-top:8px; display:flex;align-items:center;gap:12px">
-                            <label class="switch" title="Toggle keyboard shortcuts">
-                                <input id="shortcutsToggle" type="checkbox" />
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div style="font-size:13px; color:var(--muted); margin-top:6px">Enable or disable single-key and
-                            chord keyboard shortcuts.</div>
                     </div>
                     <!-- SSH Tunnelling settings removed (temporarily)
                     <div class="section meta-row" style="margin-top:10px">

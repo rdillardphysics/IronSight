@@ -21,6 +21,7 @@
     ],
     "security": { "csp": null }
   },
+  
   "bundle": {
     "active": true,
     "targets": ["dmg", "msi", "appimage"],

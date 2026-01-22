@@ -37,6 +37,19 @@ Building
   ./scripts/build-installers.sh
   ```
 
+**Note**: Windows has a couple extra requirements:
+  - Install the Visual Studio Installer
+  - From the Workloads tab, under the Desktop and Mobile section:
+    1. Desktop Development with C++
+  - From the Individual Components tab, search for the following:
+    2. Windows 11 SDK (any available should be fine)
+
+- Use the included helper script to build front-end and create the Windows `.msi`:
+
+  ```ps1
+  .\scripts\build-installers.ps1
+  ```
+  
 Artifacts
 - After a successful build, installers and bundles are in:
 

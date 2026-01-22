@@ -1990,7 +1990,6 @@ function setupSettings() {
   const closeBtn = modal ? modal.querySelector('[data-close]') : null
   const overlay = modal ? modal.querySelector('[data-overlay]') : null
   const accessToggle = document.getElementById('accessibilityToggle')
-  const shortcutsToggle = document.getElementById('shortcutsToggle')
 
   function setShortcutFooterVisible(visible) {
     const footer = document.querySelector('.shortcut-footer')
@@ -2023,10 +2022,6 @@ function setupSettings() {
     try {
       const enabled = localStorage.getItem('accessibility_enabled')
       if (accessToggle) accessToggle.checked = (enabled !== 'false')
-    } catch (e) { }
-    try {
-      const s = localStorage.getItem('shortcuts_enabled')
-      if (shortcutsToggle) shortcutsToggle.checked = (s === null ? true : (s !== 'false'))
     } catch (e) { }
     syncShortcutFooterFromStorage()
     // populate SSH fields from localStorage
@@ -2069,14 +2064,6 @@ function setupSettings() {
         teardownAccessibility()
         showToast('Accessibility disabled', 'info')
       }
-    })
-  }
-
-  if (shortcutsToggle) {
-    shortcutsToggle.addEventListener('change', (e) => {
-      const on = !!e.target.checked
-      try { localStorage.setItem('shortcuts_enabled', on ? 'true' : 'false') } catch (err) { }
-      setShortcutFooterVisible(on)
     })
   }
 
@@ -2160,6 +2147,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(recalcOutputHeight, 0)
 
   const filePicker = document.getElementById('filePicker')
+  const isWindows = (() => {
+    try {
+      const ua = String(navigator.userAgent || '').toLowerCase()
+      const platform = String(navigator.platform || '').toLowerCase()
+      return ua.includes('windows') || platform.includes('win')
+    } catch (e) {
+      return false
+    }
+  })()
+
   openBtn.addEventListener('click', async () => {
     // Try to use Tauri's native file dialog when available (bundled app).
     // Fall back to the browser file input for dev/browser mode.
@@ -2180,12 +2177,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // If the native dialog returned null/undefined, the user cancelled.
           // In that case do nothing (no toast, no fallback).
           if (chosen === null || typeof chosen === 'undefined') {
-            return
+            // On macOS, treat null as user-cancel and do nothing. On Windows,
+            // `open_native_dialog` is a no-op, so fall back to the file input.
+            if (!isWindows) return
           }
-          // Otherwise fall back to the hidden file input so the user still gets
-          // a file chooser experience.
-          showToast('No file selected via native dialog — opening file picker...', 'info', 2000)
-          // continue to fallback below
         } catch (e) {
           // invoke failed; surface error and fall back to file input
           console.warn('invoke open_native_dialog failed', e)
@@ -2210,7 +2205,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (filePicker) {
         filePicker.value = null
         filePicker.click()
-        showToast('Opening file picker...', 'info', 1200)
       } else {
         showToast('File picker is not available in this build', 'error', 4000)
       }
