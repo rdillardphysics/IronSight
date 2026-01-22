@@ -126,12 +126,21 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Run installer build script
+      - name: Run installer build script (Unix)
+        if: matrix.os != 'windows-latest'
         shell: bash
         env:
           RUST_BACKTRACE: '1'
           RUST_LOG: 'tauri=debug,tauri_cli=debug'
         run: bash ./scripts/build-installers.sh
+
+      - name: Run installer build script (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          RUST_BACKTRACE: '1'
+          RUST_LOG: 'tauri=debug,tauri_cli=debug'
+        run: .\scripts\build-installers.ps1
 
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
