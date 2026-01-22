@@ -33,6 +33,7 @@ fn helper_script_candidates(script_name: &str) -> Vec<String> {
 
     candidates.push(PathBuf::from("./scripts").join(script_name).to_string_lossy().to_string());
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    candidates.push(manifest.join(script_name).to_string_lossy().to_string());
     candidates.push(manifest.join("scripts").join(script_name).to_string_lossy().to_string());
     if let Some(parent) = manifest.parent() {
         candidates.push(parent.join("scripts").join(script_name).to_string_lossy().to_string());
@@ -501,52 +502,173 @@ fn open_native_dialog() -> Result<Option<String>, String> {
 // `scan-complete` event is emitted on exit.
 #[tauri::command]
 fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
+    let image = target.unwrap_or_default();
+    if image.trim().is_empty() {
+        return Err("scan target is required".to_string());
+    }
+
     // allow a configurable CLI via env var
     if let Ok(template) = std::env::var("IRONSIGHT_SCAN_CMD") {
-        let t = template.replace("{target}", &target.clone().unwrap_or_default());
-        // spawn a thread to run the blocking child process
+        let t = template.replace("{target}", &image);
         thread::spawn(move || {
-            if let Ok(mut child) = Command::new("sh")
-                .arg("-c")
-                .arg(t)
-                .stdout(std::process::Stdio::piped())
-                .spawn()
-            {
-                if let Some(stdout) = child.stdout.take() {
-                    let reader = std::io::BufReader::new(stdout);
-                    for line in reader.lines().flatten() {
-                        let _ =
-                            window.emit("scan-progress", Some(serde_json::json!({"line": line})));
+            #[cfg(target_os = "windows")]
+            let mut cmd = {
+                let mut c = Command::new("powershell");
+                c.arg("-NoProfile")
+                    .arg("-Command")
+                    .arg(t);
+                c
+            };
+
+            #[cfg(not(target_os = "windows"))]
+            let mut cmd = {
+                let mut c = Command::new("sh");
+                c.arg("-c").arg(t);
+                c
+            };
+
+            cmd.stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped());
+
+            match cmd.spawn() {
+                Ok(mut child) => {
+                    if let Some(stdout) = child.stdout.take() {
+                        let reader = std::io::BufReader::new(stdout);
+                        for line in reader.lines().flatten() {
+                            let _ = window.emit(
+                                "scan-progress",
+                                Some(serde_json::json!({"stream": "stdout", "line": line})),
+                            );
+                        }
                     }
+                    if let Some(err) = child.stderr.take() {
+                        let w = window.clone();
+                        thread::spawn(move || {
+                            let reader = std::io::BufReader::new(err);
+                            for line in reader.lines().flatten() {
+                                let _ = w.emit(
+                                    "scan-progress",
+                                    Some(serde_json::json!({"stream": "stderr", "line": line})),
+                                );
+                            }
+                        });
+                    }
+                    let status = child.wait().ok();
+                    let _ = window.emit(
+                        "scan-complete",
+                        Some(serde_json::json!({"status": "finished", "code": status.and_then(|s| s.code())})),
+                    );
                 }
-                let status = child.wait();
-                let _ = window.emit(
-                    "scan-complete",
-                    Some(serde_json::json!({"status": format!("{:?}", status)})),
-                );
-            } else {
-                let _ = window.emit(
-                    "scan-complete",
-                    Some(serde_json::json!({"status": "failed to launch"})),
-                );
+                Err(e) => {
+                    let _ = window.emit(
+                        "scan-complete",
+                        Some(serde_json::json!({"status": "spawn_error", "error": format!("{}", e)})),
+                    );
+                }
             }
         });
         return Ok(());
     }
 
-    // No CLI configured — simulate progress for demo purposes
+    // Default: run the bundled scan helper script (.sh on Unix, .ps1 on Windows).
+    let script_name = if cfg!(target_os = "windows") {
+        "generate-xray-report.ps1"
+    } else {
+        "generate-xray-report.sh"
+    };
+
+    let script_path = match find_helper_script(script_name) {
+        Some(p) => p,
+        None => return Err(format!("scan helper script not found: {}", script_name)),
+    };
+
     thread::spawn(move || {
-        for i in 1..=5 {
-            let _ = window.emit(
-                "scan-progress",
-                Some(serde_json::json!({"line": format!("simulated progress {}/5", i)})),
-            );
-            thread::sleep(Duration::from_millis(400));
+        let script_dir = std::path::Path::new(&script_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."));
+        let output_path = script_dir.join("detailed_report.json");
+
+        #[cfg(target_os = "windows")]
+        let mut cmd = {
+            let mut c = Command::new("powershell");
+            c.arg("-NoProfile")
+                .arg("-ExecutionPolicy")
+                .arg("Bypass")
+                .arg("-File")
+                .arg(&script_path)
+                .arg(&image);
+            c
+        };
+
+        #[cfg(not(target_os = "windows"))]
+        let mut cmd = {
+            let mut c = Command::new("sh");
+            c.arg(&script_path).arg(&image);
+            c
+        };
+
+        cmd.current_dir(script_dir)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+
+        match cmd.spawn() {
+            Ok(mut child) => {
+                if let Some(stdout) = child.stdout.take() {
+                    let reader = std::io::BufReader::new(stdout);
+                    for line in reader.lines().flatten() {
+                        let _ = window.emit(
+                            "scan-progress",
+                            Some(serde_json::json!({"stream": "stdout", "line": line})),
+                        );
+                    }
+                }
+                if let Some(err) = child.stderr.take() {
+                    let w = window.clone();
+                    thread::spawn(move || {
+                        let reader = std::io::BufReader::new(err);
+                        for line in reader.lines().flatten() {
+                            let _ = w.emit(
+                                "scan-progress",
+                                Some(serde_json::json!({"stream": "stderr", "line": line})),
+                            );
+                        }
+                    });
+                }
+
+                let status = child.wait().ok();
+                let code = status.and_then(|s| s.code());
+
+                match std::fs::read_to_string(&output_path) {
+                    Ok(content) => {
+                        let _ = window.emit(
+                            "scan-complete",
+                            Some(serde_json::json!({
+                                "status": "ok",
+                                "code": code,
+                                "output_path": output_path.to_string_lossy().to_string(),
+                                "content": content
+                            })),
+                        );
+                    }
+                    Err(e) => {
+                        let _ = window.emit(
+                            "scan-complete",
+                            Some(serde_json::json!({
+                                "status": "error",
+                                "code": code,
+                                "error": format!("failed to read output: {}", e)
+                            })),
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                let _ = window.emit(
+                    "scan-complete",
+                    Some(serde_json::json!({"status": "spawn_error", "error": format!("{}", e)})),
+                );
+            }
         }
-        let _ = window.emit(
-            "scan-complete",
-            Some(serde_json::json!({"status": "simulated"})),
-        );
     });
 
     Ok(())

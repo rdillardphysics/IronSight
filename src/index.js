@@ -2341,6 +2341,32 @@ function setupScanModeUi() {
   const scanModal = document.getElementById('scanModal')
   const scanImage = document.getElementById('scanImage')
   const scanStart = document.getElementById('scanStartBtn')
+  const output = document.getElementById('output')
+  let scanInProgress = false
+  let scanLogEl = null
+
+  function resetScanLog(message) {
+    if (!output) return
+    output.classList.remove('hidden')
+    output.innerHTML = ''
+    const meta = document.createElement('div')
+    meta.className = 'meta'
+    meta.textContent = message || 'JFrog scan in progress...'
+    output.appendChild(meta)
+    const log = document.createElement('pre')
+    log.className = 'scan-log'
+    log.textContent = ''
+    output.appendChild(log)
+    scanLogEl = log
+  }
+
+  function appendScanLine(line, stream) {
+    if (!line) return
+    if (!scanLogEl) resetScanLog('JFrog scan output')
+    const prefix = stream ? `[${stream}] ` : ''
+    scanLogEl.textContent += prefix + line + '\n'
+    scanLogEl.scrollTop = scanLogEl.scrollHeight
+  }
 
   function showScanModal() {
     if (!scanModal) return
@@ -2434,7 +2460,7 @@ function setupScanModeUi() {
   if (scanStart) {
     // initialize disabled state based on existing input value
     scanStart.disabled = !(scanImage && scanImage.value && scanImage.value.trim())
-    scanStart.addEventListener('click', () => {
+    scanStart.addEventListener('click', async () => {
       const image = scanImage ? scanImage.value.trim() : ''
       // If no image provided, warn and keep the modal open.
       if (!image) {
@@ -2442,9 +2468,26 @@ function setupScanModeUi() {
         if (scanImage) scanImage.focus()
         return
       }
-      // Placeholder: actual scan command will be implemented later.
+      if (scanInProgress) {
+        showToast('Scan already running', 'info')
+        return
+      }
+      scanInProgress = true
+      if (startBtn) startBtn.disabled = true
+      scanStart.disabled = true
+      resetScanLog(`JFrog scan in progress for ${image}`)
       showToast('Starting scan for ' + image, 'info')
       hideScanModal()
+      try {
+        await invoke('start_scan', { target: image })
+      } catch (e) {
+        scanInProgress = false
+        if (startBtn) startBtn.disabled = false
+        if (scanStart) scanStart.disabled = !(scanImage && scanImage.value && scanImage.value.trim())
+        let msg = 'Failed to start scan'
+        try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { }
+        showToast(msg, 'error')
+      }
     })
   }
 
@@ -2483,6 +2526,52 @@ function setupScanModeUi() {
         }
       } catch (e) {
         showToast('Error parsing remote file: ' + String(e), 'error')
+      }
+    })
+  } catch (e) {
+    // event API not available — ignore silently
+  }
+
+  // Listen for scan progress/completion events
+  try {
+    let scanOutput = ''
+    listen('scan-progress', event => {
+      const payload = event.payload || {}
+      const line = payload.line || ''
+      scanOutput += (line ? line + '\n' : '')
+      const out = document.getElementById('output')
+      if (out) {
+        out.classList.remove('hidden')
+        out.innerHTML = `<pre class="scan-log">${escapeHtml(scanOutput)}</pre>`
+      }
+    })
+
+    listen('scan-complete', event => {
+      const payload = event.payload || {}
+      scanInProgress = false
+      if (startBtn) startBtn.disabled = false
+      if (scanStart) scanStart.disabled = !(scanImage && scanImage.value && scanImage.value.trim())
+      if (payload && payload.content) {
+        try {
+          let parsed = JSON.parse(payload.content)
+          if (!parsed.findings && parsed.vulnerabilities) parsed = transformVulnerabilitiesClient(parsed)
+          sortState.key = 'severity'
+          sortState.dir = -1
+          scheduleRender(parsed)
+          showToast('Scan complete', 'info')
+          return
+        } catch (e) {
+          showToast('Scan completed but failed to parse report', 'error')
+        }
+      }
+
+      const out = document.getElementById('output')
+      if (out) {
+        const status = payload.status ? String(payload.status) : 'done'
+        const code = payload.code != null ? ` (code ${payload.code})` : ''
+        out.classList.remove('hidden')
+        out.innerHTML = `<div class="loading">Scan finished: ${escapeHtml(status + code)}</div>` +
+          (scanOutput ? `<pre class="scan-log">${escapeHtml(scanOutput)}</pre>` : '')
       }
     })
   } catch (e) {

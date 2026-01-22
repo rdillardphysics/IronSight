@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Provide the full image path to generate the xray report.
+# Example: ./generate-xray-report.sh git.grid:4567/usmc/tdol/core/container-images/tdol-nifi:6.2.3-101262
+
+IMAGE_NAME=$1
+json_file=detailed_report.json
+
+## Split up IMAGE_NAME
+TAG="${IMAGE_NAME##*:}"
+WITHOUT_TAG="${IMAGE_NAME%:*}"
+REPOSITORY="${WITHOUT_TAG##*/}"
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null
+then
+    echo "jq is required but it's not installed. Please install jq."
+    exit 1
+fi
+
+if ! command -v jf &> /dev/null
+then
+    echo "JFrog CLI is required but it's not installed. Please install JFrog CLI."
+    exit 1
+fi
+
+
+echo "Pulling image..."
+docker pull --quiet $IMAGE_NAME
+
+jf docker scan $IMAGE_NAME --format=simple-json > $json_file
+
+echo "Removing image..."
+docker image rm $IMAGE_NAME >/dev/null 2>&1
+
+# Count the number of High or Medium severity vulnerabilities
+critical_count=$(jq '[.vulnerabilities[] | select(.severity == "Critical") | .cves[].id] | unique | length' "$json_file")
+high_count=$(jq '[.vulnerabilities[] | select(.severity == "High") | .cves[].id] | unique | length' "$json_file")
+medium_count=$(jq '[.vulnerabilities[] | select(.severity == "Medium") | .cves[].id] | unique | length' "$json_file")
+low_count=$(jq '[.vulnerabilities[] | select(.severity == "Low") | .cves[].id] | unique | length' "$json_file")
+
+jq --arg critical "$critical_count" \
+   --arg high "$high_count" \
+   --arg medium "$medium_count" \
+   --arg low "$low_count" \
+   '. | .total_vulnerabilities = {"critical": ($critical | tonumber), "high": ($high | tonumber), "medium": ($medium | tonumber), "low": ($low | tonumber)}' "$json_file" \
+   > temp.json && mv temp.json "$json_file"
+
+jq --arg repository "$REPOSITORY" \
+   --arg tag "$TAG" \
+   '. | .image_details = {"repository": $repository, "tag": $tag }' "$json_file" \
+   > temp.json && mv temp.json "$json_file"
+
+# Output the result
+echo ""
+echo "Detailed json result created" $json_file
+echo "Total Vulnerabilities by Severity:"
+echo "Critical: $critical_count"
+echo "High: $high_count"
+echo "Medium: $medium_count"
+echo "Low: $low_count"
+

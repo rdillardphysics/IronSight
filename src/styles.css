@@ -544,6 +544,27 @@ textarea {
     color: #ff6b6b
 }
 
+.scan-log {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(2, 6, 23, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    max-height: 280px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.light .scan-log {
+    background: rgba(2, 18, 34, 0.04);
+    border-color: rgba(2, 18, 34, 0.08);
+}
+
 /* helper to hide the output panel until content is available */
 .hidden {
     display: none
