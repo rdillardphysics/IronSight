@@ -1234,8 +1234,9 @@ function transformVulnerabilitiesClient(parsed) {
   }
 
   const image = detectedImageName ? { name: detectedImageName, version: detectedImageVersion || null } : null
+  const totals = parsed.total_vulnerabilities ? parsed.total_vulnerabilities : null
 
-  return { image, scan_date: null, findings }
+  return { image, scan_date: null, total_vulnerabilities: totals, findings }
 }
 
 // wire up filter controls

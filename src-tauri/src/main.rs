@@ -650,10 +650,6 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
 
                 match std::fs::read_to_string(&output_path) {
                     Ok(content) => {
-                        #[cfg(target_os = "windows")]
-                        {
-                            let _ = open::that(&output_path);
-                        }
                         let _ = window.emit(
                             "scan-complete",
                             Some(serde_json::json!({
