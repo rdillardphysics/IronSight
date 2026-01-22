@@ -2571,7 +2571,9 @@ function setupScanModeUi() {
       if (scanStart) scanStart.disabled = !(scanImage && scanImage.value && scanImage.value.trim())
       if (payload && payload.content) {
         try {
-          let parsed = JSON.parse(payload.content)
+          let raw = payload.content
+          if (typeof raw === 'string' && raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1)
+          let parsed = JSON.parse(raw)
           if (!parsed.findings && parsed.vulnerabilities) parsed = transformVulnerabilitiesClient(parsed)
           sortState.key = 'severity'
           sortState.dir = -1
