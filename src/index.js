@@ -1780,7 +1780,7 @@ function setupAccessibility() {
         virtualState.navIndex = ni
 
         // remove previous marker
-        try { const prev = document.querySelector('.findings tbody tr.focused-row'); if (prev) { prev.classList.remove('focused-row'); prev.removeAttribute('aria-selected') } } catch (e) {}
+        try { const prev = document.querySelector('.findings tbody tr.focused-row'); if (prev) { prev.classList.remove('focused-row'); prev.removeAttribute('aria-selected') } } catch (e) { }
 
         // scroll to make index visible (virtualized list)
         if (wrap && rowHeight) {
@@ -1795,7 +1795,7 @@ function setupAccessibility() {
             const tr = (w && w.querySelector) ? w.querySelector(`.findings tbody tr[data-index='${ni}']`) : document.querySelector(`.findings tbody tr[data-index='${ni}']`)
             if (tr) {
               // ensure the row has a keyboard-focusable tabindex
-              try { tr.tabIndex = 0 } catch (e) {}
+              try { tr.tabIndex = 0 } catch (e) { }
               tr.classList.add('focused-row')
               tr.setAttribute('aria-selected', 'true')
               try { tr.focus() } catch (e) { }
@@ -2406,10 +2406,10 @@ function setupScanModeUi() {
           }
         } catch (e) {
           console.debug('start_ssh_tunnel failed', e)
-           // Surface backend error details when available to aid debugging
-           let msg = 'Failed to start SSH tunnel'
-           try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
-           showToast(msg, 'error')
+          // Surface backend error details when available to aid debugging
+          let msg = 'Failed to start SSH tunnel'
+          try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
+          showToast(msg, 'error')
         }
       } else {
         try {
@@ -2423,9 +2423,9 @@ function setupScanModeUi() {
           }
         } catch (e) {
           console.debug('stop_ssh_tunnel failed', e)
-           let msg = 'Failed to stop SSH tunnel'
-           try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
-           showToast(msg, 'error')
+          let msg = 'Failed to stop SSH tunnel'
+          try { msg += ': ' + (e && e.message ? e.message : String(e)) } catch (ee) { msg += '' }
+          showToast(msg, 'error')
         }
       }
     })

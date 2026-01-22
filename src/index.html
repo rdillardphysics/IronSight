@@ -22,12 +22,6 @@
                 <span class="slider"></span>
             </label>
             <div class="btn-group" aria-label="App Settings">
-                <!-- startSshTunnelBtn removed (temporarily)
-                <button id="startSshTunnelBtn" class="btn btn-primary btn-icon attached"
-                    aria-label="Start/Stop SSH Tunnel" title="Start/stop SSH tunnel to remote host">
-                    <img data-themed="true" data-icon="ssh" src="assets/icons/ssh-dark.svg" alt="SSH Tunnel" />
-                </button>
-                -->
                 <button id="readmeBtn" class="btn btn-secondary btn-icon attached" title="README"
                     aria-label="Show README">
                     <img data-themed="true" data-icon="readme" src="assets/icons/readme-dark.svg" alt="README" />
@@ -60,23 +54,7 @@
                 </button>
             </div>
             <input id="filePicker" type="file" accept="application/json" class="sr-only" />
-
-            <!-- Inline scan UI: aligned to the right of the controls row -->
-            <!-- JFrog startScanBtn removed (temporarily)
-            <div class="scan-inline">
-                <div class="scan-ui">
-                    <button id="startScanBtn" class="btn btn-primary btn-icon" aria-label="Start Scan"
-                        title="Start JFrog Xray scan">
-                        <img data-themed="true" data-icon="jfrog-icon" src="assets/icons/jfrog-icon-dark.svg"
-                            alt="Start Scan" />
-                    </button>
-                </div>
-            </div>
-            -->
         </section>
-
-        <!-- Move scan UI inline into the controls row and align it to the right -->
-        <!-- The `.scan-inline` container will be appended inside `.controls` by markup below. -->
 
         <div id="filters" class="filters">
             <!-- Simplified: only action buttons remain. Controls (severity/search) removed per request. -->
@@ -279,38 +257,6 @@
                                 modal inerting.</div>
                         </div>
                     </div>
-                    <!-- SSH Tunnelling settings removed (temporarily)
-                    <div class="section meta-row" style="margin-top:10px">
-                        <label style="font-weight:600">SSH Tunnelling</label>
-                        <div style="margin-top:8px; display:flex;flex-direction:column;gap:8px">
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshIp" style="min-width:75px">IP / Host</label>
-                                <input id="sshIp" type="text" placeholder="e.g. 10.0.0.5" style="flex:1" />
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshUser" style="min-width:75px">Username</label>
-                                <input id="sshUser" type="text" placeholder="e.g. deploy" style="flex:1" />
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <label for="sshPassword" style="min-width:75px">Password</label>
-                                <div class="input-group" style="flex:1">
-                                    <input id="sshPassword" type="password" placeholder="(stored securely)"
-                                        style="flex:1;min-width:0" />
-                                    <button id="saveSshBtn" class="btn btn-primary btn-icon attached"
-                                        title="Save SSH credential" aria-label="Save SSH credential">
-                                        <img data-themed="true" data-icon="save" src="assets/icons/save-dark.svg"
-                                            alt="Save" />
-                                    </button>
-                                    <button id="clearSshBtn" class="btn btn-ghost btn-icon attached"
-                                        title="Clear stored password" aria-label="Clear stored password">
-                                        <img data-themed="true" data-icon="clean" src="assets/icons/clean-dark.svg"
-                                            alt="Clear" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    -->
                 </div>
             </div>
         </div>
