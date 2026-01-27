@@ -597,8 +597,8 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
         None => return Err(format!("scan helper script not found: {}", script_name)),
     };
 
-    let app_handle = window.clone().app_handle();
     thread::spawn(move || {
+        let app_handle = window.app_handle();
         let script_dir = std::path::Path::new(&script_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."));
