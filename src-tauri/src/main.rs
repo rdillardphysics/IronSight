@@ -582,7 +582,17 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
         "generate-xray-report.sh"
     };
 
-    let script_path = match find_helper_script(script_name) {
+    let mut script_path = find_helper_script(script_name);
+    if script_path.is_none() {
+        if let Ok(resource_dir) = window.app_handle().path().resource_dir() {
+            let candidate = resource_dir.join(script_name);
+            if candidate.exists() {
+                script_path = Some(candidate.to_string_lossy().to_string());
+            }
+        }
+    }
+
+    let script_path = match script_path {
         Some(p) => p,
         None => return Err(format!("scan helper script not found: {}", script_name)),
     };

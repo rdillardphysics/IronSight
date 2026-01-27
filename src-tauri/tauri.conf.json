@@ -35,6 +35,9 @@
     "active": true,
     "targets": ["dmg", "msi", "appimage"],
     "icon": ["icons/icon.ico", "icons/icon.png"],
-    "resources": []
+    "resources": [
+      "generate-xray-report.ps1",
+      "generate-xray-report.sh"
+    ]
   }
 }
