@@ -1,12 +1,14 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [string]$ImageName
+    [string]$ImageName,
+    [Parameter(Mandatory = $false, Position = 1)]
+    [string]$OutputPath
 )
 
 # Provide the full image path to generate the xray report.
 # Example: .\generate-xray-report.ps1 git.grid:4567/usmc/tdol/core/container-images/tdol-nifi:6.2.3-101262
 
-$JsonFile = "detailed_report.json"
+$JsonFile = if ($OutputPath) { $OutputPath } else { "detailed_report.json" }
 
 function Require-Command([string]$Name, [string]$Display) {
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {

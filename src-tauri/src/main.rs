@@ -597,11 +597,22 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
         None => return Err(format!("scan helper script not found: {}", script_name)),
     };
 
+    let app_handle = window.app_handle();
     thread::spawn(move || {
         let script_dir = std::path::Path::new(&script_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."));
-        let output_path = script_dir.join("detailed_report.json");
+
+        // Prefer app data directory for report output (works for installed builds).
+        let output_path = app_handle
+            .path()
+            .app_data_dir()
+            .ok()
+            .map(|dir| {
+                let _ = std::fs::create_dir_all(&dir);
+                dir.join("detailed_report.json")
+            })
+            .unwrap_or_else(|| script_dir.join("detailed_report.json"));
 
         #[cfg(target_os = "windows")]
         let mut cmd = {
@@ -611,14 +622,15 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
                 .arg("Bypass")
                 .arg("-File")
                 .arg(&script_path)
-                .arg(&image);
+                .arg(&image)
+                .arg(&output_path);
             c
         };
 
         #[cfg(not(target_os = "windows"))]
         let mut cmd = {
             let mut c = Command::new("sh");
-            c.arg(&script_path).arg(&image);
+            c.arg(&script_path).arg(&image).arg(&output_path);
             // Ensure common Homebrew/system paths are available for jf/jq/docker
             let base_path = std::env::var("PATH").unwrap_or_default();
             let extra_path = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";

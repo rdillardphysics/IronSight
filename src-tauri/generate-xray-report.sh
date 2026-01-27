@@ -4,7 +4,7 @@
 # Example: ./generate-xray-report.sh git.grid:4567/usmc/tdol/core/container-images/tdol-nifi:6.2.3-101262
 
 IMAGE_NAME=$1
-json_file=detailed_report.json
+json_file=${2:-detailed_report.json}
 
 ## Split up IMAGE_NAME
 TAG="${IMAGE_NAME##*:}"
@@ -41,7 +41,7 @@ fi
 echo "Pulling image..."
 docker pull --quiet $IMAGE_NAME
 
-jf docker scan $IMAGE_NAME --format=simple-json > $json_file
+jf docker scan $IMAGE_NAME --format=simple-json > "$json_file"
 
 echo "Removing image..."
 docker image rm $IMAGE_NAME >/dev/null 2>&1
@@ -61,12 +61,12 @@ jq --arg critical "$critical_count" \
    --arg info "$info_count" \
    --arg unknown "$unknown_count" \
    '. | .total_vulnerabilities = {"critical": ($critical | tonumber), "high": ($high | tonumber), "medium": ($medium | tonumber), "low": ($low | tonumber), "info": ($info | tonumber), "unknown": ($unknown | tonumber)}' "$json_file" \
-   > temp.json && mv temp.json "$json_file"
+    > temp.json && mv temp.json "$json_file"
 
 jq --arg repository "$REPOSITORY" \
    --arg tag "$TAG" \
    '. | .image_details = {"repository": $repository, "tag": $tag }' "$json_file" \
-   > temp.json && mv temp.json "$json_file"
+    > temp.json && mv temp.json "$json_file"
 
 # Output the result
 echo ""
