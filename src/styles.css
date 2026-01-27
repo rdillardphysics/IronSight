@@ -413,6 +413,28 @@ textarea {
     border-left: none
 }
 
+.output-panel .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+}
+
+.output-panel .meta .meta-toggle {
+    margin-left: auto;
+}
+
+.totals-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
 .findings {
     width: 100%;
     border-collapse: collapse;
@@ -438,6 +460,17 @@ textarea {
     padding: 10px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     text-align: left
+}
+
+.findings .mitigated-cell {
+    text-align: center;
+    width: 1%;
+    white-space: nowrap;
+}
+
+.findings .mitigated-checkbox {
+    transform: scale(1.05);
+    cursor: pointer;
 }
 
 .findings th {

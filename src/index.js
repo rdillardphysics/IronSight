@@ -34,12 +34,18 @@ import readmeDark from './assets/icons/readme-dark.svg'
 import readmeLight from './assets/icons/readme-light.svg'
 import saveDark from './assets/icons/save-dark.svg'
 import saveLight from './assets/icons/save-light.svg'
+import eyeDark from './assets/icons/eye-dark.svg'
+import eyeLight from './assets/icons/eye-light.svg'
+import eyeOffDark from './assets/icons/eye-off-dark.svg'
+import eyeOffLight from './assets/icons/eye-off-light.svg'
 
 const ICON_MAP = {
   moon: { dark: moonDark, light: moonLight },
   path: { dark: pathDark, light: pathLight },
   folder: { dark: folderDark, light: folderLight },
   clean: { dark: cleanDark, light: cleanLight },
+  eye: { dark: eyeDark, light: eyeLight },
+  'eye-off': { dark: eyeOffDark, light: eyeOffLight },
   save: { dark: saveDark, light: saveLight },
   icon: { dark: iconDark, light: iconLight },
   'filter-remove': { dark: filterRemoveDark, light: filterRemoveLight },
@@ -83,6 +89,50 @@ async function openExternal(url) {
 let currentFindings = []
 let lastLoadedData = null
 let sortState = { key: null, dir: 1 } // dir: 1 asc, -1 desc
+
+// Mitigated findings state (per finding id)
+const mitigatedStorageKey = 'ironsight_mitigated_findings'
+const hideMitigatedKey = 'ironsight_hide_mitigated'
+let mitigatedMap = (() => {
+  try {
+    const raw = localStorage.getItem(mitigatedStorageKey)
+    return raw ? JSON.parse(raw) : {}
+  } catch (e) { return {} }
+})()
+let hideMitigated = (() => {
+  try {
+    const raw = localStorage.getItem(hideMitigatedKey)
+    return raw === '1' || raw === 'true'
+  } catch (e) { return false }
+})()
+
+function saveMitigatedState() {
+  try { localStorage.setItem(mitigatedStorageKey, JSON.stringify(mitigatedMap || {})) } catch (e) { }
+  try { localStorage.setItem(hideMitigatedKey, hideMitigated ? '1' : '0') } catch (e) { }
+}
+
+function findingKey(f) {
+  if (!f) return ''
+  if (f.id) return String(f.id)
+  const pkg = f.package?.name || f.component || 'unknown'
+  const ver = f.package?.version || ''
+  const sev = f.severity || ''
+  const cves = Array.isArray(f.cves) ? f.cves.join(',') : (f.cves || '')
+  return `${pkg}|${ver}|${sev}|${cves}`
+}
+
+function isMitigated(f) {
+  const key = findingKey(f)
+  return !!(key && mitigatedMap && mitigatedMap[key])
+}
+
+function setMitigated(f, val) {
+  const key = findingKey(f)
+  if (!key) return
+  if (val) mitigatedMap[key] = true
+  else delete mitigatedMap[key]
+  saveMitigatedState()
+}
 // filterState.severities: map of severity -> boolean indicating whether it's included
 // filterState.showAll: true => bypass severity filtering (Show All ON)
 // filterState.severities: map of severity -> boolean indicating whether it's included
@@ -461,6 +511,7 @@ function matchRuleAgainstFinding(rule, f) {
 
 function filterFindings(data) {
   return (data || []).filter(f => {
+    if (hideMitigated && isMitigated(f)) return false
     // severity filtering: if Show All is enabled, skip severity filtering
     if (!filterState.showAll) {
       const sev = (f.severity || '').toLowerCase()
@@ -900,7 +951,7 @@ function renderFindings(data) {
   const infoCount = Number(totals.info || 0)
   const unknownCount = Number(totals.unknown || 0)
 
-  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay} — <strong>Vulnerabilities:</strong> <strong>Critical:</strong> ${criticalCount} <strong>High:</strong> ${highCount} <strong>Medium:</strong> ${mediumCount} <strong>Low:</strong> ${lowCount} <strong>Info:</strong> ${infoCount} <strong>Unknown:</strong> ${unknownCount}`
+  meta.innerHTML = `<strong>Image:</strong> ${imageDisplay}`
   out.appendChild(meta)
 
   // Move the filters element into the output panel so it displays directly
@@ -933,10 +984,11 @@ function renderFindings(data) {
     <colgroup>
       <col style="width:12%" />
       <col style="width:16%" />
-      <col style="width:10%" />
-      <col style="width:24%" />
-      <col style="width:20%" />
+      <col style="width:6%" />
+      <col style="width:22%" />
       <col style="width:18%" />
+      <col style="width:16%" />
+      <col style="width:10%" />
     </colgroup>`
 
   const headerTable = document.createElement('table')
@@ -950,6 +1002,7 @@ function renderFindings(data) {
         <th data-sort="package" data-title="Package">Package</th>
         <th data-title="Version">Version</th>
         <th data-title="Fix">Fix</th>
+        <th data-title="Mitigated">Mitigated</th>
       </tr>
     </thead>`
 
@@ -990,6 +1043,7 @@ function renderFindings(data) {
         <td>${sample.package?.name || sample.component || ''}</td>
         <td>${sample.package?.version || ''}</td>
         <td>${sample.fix_available ? (sample.fixed_version || 'available') : 'none'}</td>
+        <td class="mitigated-cell"><input type="checkbox" disabled /></td>
       </tr></tbody>`
       document.body.appendChild(tmpTable)
       const tr = tmpTable.querySelector('tr')
@@ -1040,6 +1094,19 @@ function renderFindings(data) {
   findingsWrap.appendChild(overlay)
   out.appendChild(findingsWrap)
 
+  // totals summary displayed below the table for less crowding in the header
+  const totalsBar = document.createElement('div')
+  totalsBar.className = 'totals-bar'
+  totalsBar.innerHTML = `
+    <span><strong>Critical:</strong> ${criticalCount}</span>
+    <span><strong>High:</strong> ${highCount}</span>
+    <span><strong>Medium:</strong> ${mediumCount}</span>
+    <span><strong>Low:</strong> ${lowCount}</span>
+    <span><strong>Info:</strong> ${infoCount}</span>
+    <span><strong>Unknown:</strong> ${unknownCount}</span>
+  `
+  out.appendChild(totalsBar)
+
   // render function for visible window
   function renderWindow() {
     const height = findingsWrap.clientHeight || 300
@@ -1056,6 +1123,7 @@ function renderFindings(data) {
       // expose the global index for keyboard navigation and accessibility
       tr.dataset.index = String(i)
       const sev = (f.severity || '').toLowerCase()
+      const mitigated = isMitigated(f)
       tr.innerHTML = `
         <td class="severity ${sev}">${f.severity || ''}</td>
         <td>${(f.cves || []).join(', ')}</td>
@@ -1063,6 +1131,9 @@ function renderFindings(data) {
         <td>${f.package?.name || f.component || ''}</td>
         <td>${f.package?.version || ''}</td>
         <td>${f.fix_available ? (f.fixed_version || 'available') : 'none'}</td>
+        <td class="mitigated-cell">
+          <input class="mitigated-checkbox" type="checkbox" ${mitigated ? 'checked' : ''} aria-label="Mark mitigated" />
+        </td>
       `
       tr.classList.add('clickable-row')
       tr.setAttribute('role', 'button')
@@ -1070,10 +1141,30 @@ function renderFindings(data) {
       tr.setAttribute('aria-selected', 'false')
       tr.setAttribute('aria-label', `${f.severity || ''} ${f.package?.name || f.component || ''}`)
       // wire events on the rendered row
-      tr.addEventListener('click', () => showFindingDetail(f))
+      tr.addEventListener('click', (e) => {
+        const target = e && e.target
+        if (target && target.classList && target.classList.contains('mitigated-checkbox')) return
+        showFindingDetail(f)
+      })
       tr.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showFindingDetail(f) }
       })
+      const cb = tr.querySelector('.mitigated-checkbox')
+      if (cb) {
+        cb.addEventListener('click', (e) => { e.stopPropagation() })
+        cb.addEventListener('change', (e) => {
+          const checked = !!e.target.checked
+          setMitigated(f, checked)
+          if (hideMitigated && checked) scheduleRender({
+            image: (data && data.image) ? data.image : (lastLoadedData ? lastLoadedData.image : null),
+            scan_date: (data && data.scan_date) ? data.scan_date : (lastLoadedData ? lastLoadedData.scan_date : null),
+            total_vulnerabilities: (data && data.total_vulnerabilities)
+              ? data.total_vulnerabilities
+              : (lastLoadedData ? lastLoadedData.total_vulnerabilities : null),
+            findings: currentFindings
+          })
+        })
+      }
       tr.addEventListener('focus', () => tr.setAttribute('aria-selected', 'true'))
       tr.addEventListener('blur', () => tr.setAttribute('aria-selected', 'false'))
       overlayTbody.appendChild(tr)
@@ -1145,6 +1236,7 @@ function renderFindings(data) {
       })
     }
   })
+
 }
 
 // Client-side transformer for `vulnerabilities` -> normalized `{ findings }` shape.
@@ -1243,6 +1335,7 @@ function transformVulnerabilitiesClient(parsed) {
 function setupFilters() {
   const openBtn = document.getElementById('openFilters')
   const clear = document.getElementById('clearFilters')
+  const hideMitigatedBtn = document.getElementById('hideMitigatedBtn')
   const modal = document.getElementById('filtersModal')
   const modalSeverityChecks = modal ? Array.from(modal.querySelectorAll('.modalSeverityChk')) : []
   const modalShowAll = document.getElementById('modalShowAll')
@@ -1552,6 +1645,37 @@ function setupFilters() {
   }
 
   if (openBtn) openBtn.addEventListener('click', showFiltersModal)
+  if (hideMitigatedBtn) {
+    const updateHideButton = () => {
+      const iconName = hideMitigated ? 'eye-off' : 'eye'
+      hideMitigatedBtn.setAttribute('aria-pressed', hideMitigated ? 'true' : 'false')
+      hideMitigatedBtn.setAttribute('title', hideMitigated ? 'Show mitigated findings' : 'Hide mitigated findings')
+      hideMitigatedBtn.setAttribute('aria-label', hideMitigated ? 'Show mitigated findings' : 'Hide mitigated findings')
+      const img = hideMitigatedBtn.querySelector('img[data-themed="true"]')
+      if (img) {
+        img.dataset.icon = iconName
+        const theme = getSavedTheme()
+        const mapped = ICON_MAP[iconName] && ICON_MAP[iconName][theme]
+        if (mapped) img.src = mapped
+      }
+    }
+    updateHideButton()
+    hideMitigatedBtn.addEventListener('click', () => {
+      hideMitigated = !hideMitigated
+      saveMitigatedState()
+      updateHideButton()
+      if (!currentFindings || currentFindings.length === 0) {
+        loadReadmeIntoOutput()
+        return
+      }
+      scheduleRender({
+        image: lastLoadedData?.image || null,
+        scan_date: lastLoadedData?.scan_date || null,
+        total_vulnerabilities: lastLoadedData?.total_vulnerabilities || null,
+        findings: currentFindings
+      })
+    })
+  }
   if (modalApply) modalApply.addEventListener('click', applyFiltersFromModal)
   if (modalReset) modalReset.addEventListener('click', resetModal)
   if (modal) {
