@@ -20,6 +20,24 @@ Bump versions in all of these files (they should match):
 
 Commit and push those version changes to `main`.
 
+## macOS notarization (CI)
+
+The macOS artifacts are codesigned and notarized in CI. Configure these repository secrets:
+
+- `APPLE_ID` (Apple ID email)
+- `APPLE_ID_PASSWORD` (app-specific password)
+- `APPLE_TEAM_ID` (Team ID)
+- `APPLE_CERTIFICATE` (base64-encoded .p12 Developer ID Application certificate)
+- `APPLE_CERTIFICATE_PASSWORD` (password for the .p12)
+- `APPLE_SIGNING_IDENTITY` (e.g., `Developer ID Application: Your Org (TEAMID)`)
+- `APPLE_KEYCHAIN_PASSWORD` (temporary keychain password for CI)
+
+Notes:
+
+- Create a Developer ID Application certificate in the Apple Developer portal and export it as `.p12`.
+- Base64-encode the `.p12` file and store it in `APPLE_CERTIFICATE`.
+- Use an app-specific password for `APPLE_ID_PASSWORD`.
+
 ## Create the tag
 
 ```bash
