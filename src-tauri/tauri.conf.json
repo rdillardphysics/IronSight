@@ -43,12 +43,7 @@
       "entitlements": "entitlements.plist",
       "hardenedRuntime": true,
       "providerShortName": "74397Y38JQ",
-      "signingIdentity": "Developer ID Application: Rusty Dillard (74397Y38JQ)",
-      "notarization": {
-        "appleId": "$APPLE_ID",
-        "appleIdPassword": "$APPLE_ID_PASSWORD",
-        "teamId": "74397Y38JQ"
-      }
+      "signingIdentity": "Developer ID Application: Rusty Dillard (74397Y38JQ)"
     }
   }
 }
