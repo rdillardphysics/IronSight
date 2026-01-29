@@ -177,7 +177,14 @@ jobs:
             exit 1
           fi
 
-          APP_PATH=$(find src-tauri/target/release/bundle -name "*.app" -maxdepth 4 | head -n 1)
+          echo "Listing macOS bundle output (debug)..."
+          ls -la src-tauri/target/release/bundle || true
+          ls -la src-tauri/target/release/bundle/macos || true
+
+          APP_PATH=$(find src-tauri/target/release/bundle/macos -name "*.app" -maxdepth 3 | head -n 1)
+          if [[ -z "${APP_PATH:-}" ]]; then
+            APP_PATH=$(find src-tauri/target/release/bundle -name "*.app" -maxdepth 6 | head -n 1)
+          fi
           if [[ -z "${APP_PATH:-}" ]]; then
             echo "No .app bundle found under src-tauri/target/release/bundle" >&2
             exit 1
