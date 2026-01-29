@@ -191,7 +191,8 @@ jobs:
           CERT_PATH="$RUNNER_TEMP/macos_cert.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/ironsight.keychain-db"
           echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_PATH"
-
+          # Ensure a clean temp keychain
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
           security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
