@@ -30,7 +30,7 @@ The macOS artifacts are codesigned and notarized in CI. Configure these reposito
 - `APPLE_CERTIFICATE` (base64-encoded .p12 Developer ID Application certificate)
 - `APPLE_CERTIFICATE_PASSWORD` (password for the .p12)
 - `APPLE_SIGNING_IDENTITY` (e.g., `Developer ID Application: Your Org (TEAMID)`)
-- `APPLE_KEYCHAIN_PASSWORD` (temporary keychain password for CI)
+- `APPLE_KEYCHAIN_PASSWORD` (temporary keychain password for CI) 
 
 Notes:
 
