@@ -147,6 +147,30 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: (macOS) Import signing certificate
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${APPLE_CERTIFICATE:-}" || -z "${APPLE_CERTIFICATE_PASSWORD:-}" || -z "${APPLE_KEYCHAIN_PASSWORD:-}" ]]; then
+            echo "Missing macOS signing secrets. Cannot import certificate." >&2
+            exit 1
+          fi
+          CERT_PATH="$RUNNER_TEMP/macos_cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ironsight.keychain-db"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
       - name: (Windows) Diagnostics (bash env)
         if: matrix.os == 'windows-latest'
         shell: bash
