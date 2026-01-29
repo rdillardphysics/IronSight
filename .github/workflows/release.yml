@@ -134,6 +134,65 @@ jobs:
           RUST_LOG: 'tauri=debug,tauri_cli=debug'
         run: bash ./scripts/build-installers.sh
 
+      - name: (macOS) Codesign and notarize app
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${APPLE_CERTIFICATE:-}" || -z "${APPLE_SIGNING_IDENTITY:-}" ]]; then
+            echo "Missing macOS signing secrets. Skipping notarization." >&2
+            exit 1
+          fi
+
+          APP_PATH=$(find src-tauri/target/release/bundle -name "*.app" -maxdepth 4 | head -n 1)
+          if [[ -z "${APP_PATH:-}" ]]; then
+            echo "No .app bundle found under src-tauri/target/release/bundle" >&2
+            exit 1
+          fi
+
+          DMG_PATH=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" -maxdepth 3 | head -n 1)
+          if [[ -z "${DMG_PATH:-}" ]]; then
+            echo "No .dmg found under src-tauri/target/release/bundle/dmg" >&2
+            exit 1
+          fi
+
+          echo "Using app: $APP_PATH"
+          echo "Using dmg: $DMG_PATH"
+
+          CERT_PATH="$RUNNER_TEMP/macos_cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ironsight.keychain-db"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "Signing app..."
+          /usr/bin/codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$APP_PATH"
+
+          echo "Rebuilding DMG from signed app..."
+          rm -f "$DMG_PATH"
+          /usr/bin/hdiutil create -volname "IronSight" -srcfolder "$APP_PATH" -ov -format UDZO "$DMG_PATH"
+
+          echo "Submitting DMG for notarization..."
+          xcrun notarytool submit "$DMG_PATH" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_ID_PASSWORD" --wait
+
+          echo "Stapling notarization ticket..."
+          xcrun stapler staple "$DMG_PATH"
+
       - name: Run installer build script (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
