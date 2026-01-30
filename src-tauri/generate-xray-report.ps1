@@ -38,13 +38,23 @@ $repository = if ($lastRepoSlash -gt -1) { $withoutTag.Substring($lastRepoSlash 
 Write-Host "Pulling image..."
 & docker pull --quiet $ImageName | Out-Null
 
-& jf docker scan $ImageName --format=simple-json | Out-File -Encoding utf8 $JsonFile
+try {
+    $scanJson = & jf docker scan $ImageName --format=simple-json
+    [System.IO.File]::WriteAllText($JsonFile, $scanJson, (New-Object System.Text.UTF8Encoding($false)))
+} catch {
+    Write-Host "Failed to write scan output: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "Removing image..."
 & docker image rm $ImageName | Out-Null
 
 # Read and update JSON with totals and image details
 $jsonText = Get-Content -Raw -Path $JsonFile
+if (-not $jsonText) {
+    Write-Host "Scan output is empty; cannot parse JSON." -ForegroundColor Red
+    exit 1
+}
 $json = $jsonText | ConvertFrom-Json
 
 $vuls = @()
@@ -84,7 +94,8 @@ $json | Add-Member -NotePropertyName "image_details" -NotePropertyValue @{
     tag = $tag
 } -Force
 
-$json | ConvertTo-Json -Depth 100 | Set-Content -Encoding utf8 $JsonFile
+$jsonOut = $json | ConvertTo-Json -Depth 100
+[System.IO.File]::WriteAllText($JsonFile, $jsonOut, (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host ""
 Write-Host "Detailed json result created $JsonFile"

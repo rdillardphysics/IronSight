@@ -635,11 +635,18 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
         let image_name = image.clone();
         let (repo_name, tag) = parse_image_parts(&image_name);
         let ts = Local::now().format("%Y%m%d-%H.%M").to_string();
-        let reports_dir = script_dir
-            .join("reports")
+        let rel_reports_dir = std::path::Path::new("reports")
             .join(sanitize_path_segment(&repo_name))
             .join(sanitize_path_segment(&tag));
-        let _ = std::fs::create_dir_all(&reports_dir);
+        let mut reports_dir = script_dir.join(&rel_reports_dir);
+        if let Err(_) = std::fs::create_dir_all(&reports_dir) {
+            if let Ok(app_data_dir) = window.app_handle().path().app_data_dir() {
+                let fallback = app_data_dir.join(&rel_reports_dir);
+                if std::fs::create_dir_all(&fallback).is_ok() {
+                    reports_dir = fallback;
+                }
+            }
+        }
         let output_path = reports_dir.join(format!("detailed_report-{}.json", ts));
 
         #[cfg(target_os = "windows")]
