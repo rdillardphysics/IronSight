@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Provide the full image path to generate the xray report.
-# Example: ./generate-xray-report.sh git.grid:4567/usmc/tdol/core/container-images/tdol-nifi:6.2.3-101262
 
 IMAGE_NAME=$1
 json_file=${2:-detailed_report.json}
+mkdir -p "$(dirname "$json_file")" >/dev/null 2>&1
 
 ## Split up IMAGE_NAME
 TAG="${IMAGE_NAME##*:}"

@@ -1,4 +1,4 @@
-# IronSight — TDOL's JFrog Xray Findings Viewer
+# IronSight — A JFrog Xray Findings Viewer
 
 IronSight is a native desktop app for viewing JFrog Xray container-scan findings in a simple, sortable, searchable interface.
 

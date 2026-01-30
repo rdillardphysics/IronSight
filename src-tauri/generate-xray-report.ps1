@@ -6,9 +6,12 @@ param(
 )
 
 # Provide the full image path to generate the xray report.
-# Example: .\generate-xray-report.ps1 git.grid:4567/usmc/tdol/core/container-images/tdol-nifi:6.2.3-101262
 
 $JsonFile = if ($OutputPath) { $OutputPath } else { "detailed_report.json" }
+$jsonDir = Split-Path -Parent $JsonFile
+if ($jsonDir -and -not (Test-Path $jsonDir)) {
+    New-Item -ItemType Directory -Path $jsonDir -Force | Out-Null
+}
 
 function Require-Command([string]$Name, [string]$Display) {
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {

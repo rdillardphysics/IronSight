@@ -11,6 +11,7 @@ use std::process::Command;
 use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
+use chrono::Local;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri::Window;
@@ -65,6 +66,34 @@ fn find_helper_script(script_name: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn parse_image_parts(image: &str) -> (String, String) {
+    let last_colon = image.rfind(':');
+    let last_slash = image.rfind('/');
+    let (without_tag, tag) = match (last_colon, last_slash) {
+        (Some(c), Some(s)) if c > s => (&image[..c], image[c + 1..].to_string()),
+        (Some(c), None) => (&image[..c], image[c + 1..].to_string()),
+        _ => (image, "latest".to_string()),
+    };
+    let repo = match without_tag.rfind('/') {
+        Some(idx) => without_tag[idx + 1..].to_string(),
+        None => without_tag.to_string(),
+    };
+    (if repo.is_empty() { "unknown".to_string() } else { repo }, if tag.is_empty() { "latest".to_string() } else { tag })
+}
+
+fn sanitize_path_segment(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for ch in input.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '.' {
+            out.push(ch);
+        } else {
+            out.push('_');
+        }
+    }
+    let trimmed = out.trim_matches('_').to_string();
+    if trimmed.is_empty() { "unknown".to_string() } else { trimmed }
 }
 
 #[tauri::command]
@@ -598,21 +627,20 @@ fn start_scan(window: Window, target: Option<String>) -> Result<(), String> {
     };
 
     thread::spawn(move || {
-        let app_handle = window.app_handle();
         let script_dir = std::path::Path::new(&script_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."));
 
-        // Prefer app data directory for report output (works for installed builds).
-        let output_path = app_handle
-            .path()
-            .app_data_dir()
-            .ok()
-            .map(|dir| {
-                let _ = std::fs::create_dir_all(&dir);
-                dir.join("detailed_report.json")
-            })
-            .unwrap_or_else(|| script_dir.join("detailed_report.json"));
+        // Build output path: ./<script>/reports/<image-name>/<image-tag>/detailed_report-<YYYYMMDD>-<HH.MM>.json
+        let image_name = image.clone();
+        let (repo_name, tag) = parse_image_parts(&image_name);
+        let ts = Local::now().format("%Y%m%d-%H.%M").to_string();
+        let reports_dir = script_dir
+            .join("reports")
+            .join(sanitize_path_segment(&repo_name))
+            .join(sanitize_path_segment(&tag));
+        let _ = std::fs::create_dir_all(&reports_dir);
+        let output_path = reports_dir.join(format!("detailed_report-{}.json", ts));
 
         #[cfg(target_os = "windows")]
         let mut cmd = {
@@ -955,14 +983,8 @@ mod tests {
             .get("image")
             .and_then(|i| i.as_object())
             .expect("image obj");
-        assert_eq!(
-            image.get("name").and_then(|v| v.as_str()).unwrap(),
-            "tdol-datahub-actions"
-        );
-        assert_eq!(
-            image.get("version").and_then(|v| v.as_str()).unwrap(),
-            "8.0.2-101394"
-        );
+        assert_eq!(image.get("name").and_then(|v| v.as_str()).unwrap(), "b");
+        assert_eq!(image.get("version").and_then(|v| v.as_str()).unwrap(), "2");
     }
 }
 
